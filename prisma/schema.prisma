@@ -1,0 +1,61 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id        Int     @id @default(autoincrement())
+  name     String
+  description   String? 
+  published Boolean @default(false)
+  category    Category   @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  author   User @relation(fields: [authorId], references: [id])
+  authorId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  likes Like[]
+  ratings Rating[]
+}
+model Profile {
+  id     Int     @id @default(autoincrement())
+  bio    String?
+  user   User    @relation(fields: [userId], references: [id])
+  userId Int     @unique
+
+}
+model User {
+  id    Int  @id @default(autoincrement())
+  email String  @unique
+  name  String?
+  avatar  String?
+  products Product[]
+  profile Profile?
+  likes Like[]
+  ratings Rating[]
+}
+
+model Category {
+  id    Int     @id @default(autoincrement())
+  name String  @unique
+  description  String?
+  products Product[]
+}
+model Like {
+  id    Int     @id @default(autoincrement())
+  products Product @relation(fields:[productId],references:[id])
+  productId Int
+  likedBy   User   @relation(fields: [likedById], references: [id])
+  likedById Int
+}
+model Rating {
+  id    Int     @id @default(autoincrement())
+  products Product @relation(fields:[productId],references:[id])
+  productId Int
+  ratedBy   User   @relation(fields: [ratedById], references: [id])
+  ratedById Int
+}
