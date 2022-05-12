@@ -1,0 +1,14 @@
+{
+    "App": {
+      "appConfig": {
+        "host": "http://localhost",
+        "port": 3030,
+        "dbName": "file:./dev.db"
+      },
+      "client": {
+        "secretToken": "QoBudGGwnZfClrE58wRsMsjtaZgE7rhS",
+        "refrehToken": "kcFaA28lBmH2chpzuqN1q27CybaAITtk",
+        "refreshLifetime": "2hr"
+      }
+    }
+  }
