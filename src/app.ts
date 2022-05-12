@@ -23,6 +23,13 @@ app.use(expressCspHeader({
     }
 }));
 
+process.on("uncaughtException", (err) => {
+  console.log("UNCAUGHT EXCEPTION, APP SHUTTING NOW!!");
+  console.log(err.message, err.name);
+  process.exit(1);
+});
+
+
 app.post(`/signup`, async (req, res) => {
   const { name, email,password, products,categoryId,authorId } = req.body
 

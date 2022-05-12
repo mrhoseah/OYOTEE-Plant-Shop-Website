@@ -1,5 +1,5 @@
 {
-  "name": "script",
+  "name": "oyotee-plant-shop-api",
   "license": "MIT",
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
