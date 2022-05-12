@@ -2,12 +2,13 @@
     "App": {
       "appConfig": {
         "host": "http://localhost",
+        "origin": "http://localhost:3000",
         "port": 3030,
         "dbName": "file:./dev.db"
       },
       "client": {
         "secret": "Uc0Sum9LgMhwAzgcsm15ZhMq0Qi0gt6p",
-        "refreshLifetime": "2hr"
+        "refreshLifetime": 86400
       }
     }
   }

@@ -1,20 +1,20 @@
-import express from 'express';
+import { Router } from 'express';
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const router = express.Router()
+const categoriesRouter = Router()
 
-router.get('/categories', async (req, res) => {
+categoriesRouter.get('/', async (req, res) => {
   try{
 
     const categories = await prisma.category.findMany()
     res.json(categories)
-  }catch (err){
+  }catch (err:any){
     res.status(401).send(err)
   }
 })
-router.post(`/categories`, async (req, res) => {
+categoriesRouter.post(`/`, async (req, res) => {
     try{  
       const { name, description } = req.body
         // check if category already exist
@@ -31,11 +31,11 @@ router.post(`/categories`, async (req, res) => {
         },
       })
       res.json(result)
-    }catch (err){
+    }catch (err:any){
       res.status(409).send(err)
     }
 })
-router.get(`/categories/:id`, async (req, res) => {
+categoriesRouter.get(`/:id`, async (req, res) => {
   const { id } = req.params
 
   const category = await prisma.category.findUnique({
@@ -44,7 +44,7 @@ router.get(`/categories/:id`, async (req, res) => {
   res.json(category)
 })
 
-router.delete(`/categories/:id`, async (req, res) => {
+categoriesRouter.delete(`/:id`, async (req, res) => {
   try{
     const { id } = req.params
     const user = await prisma.category.delete({
@@ -53,9 +53,9 @@ router.delete(`/categories/:id`, async (req, res) => {
       },
     })
     res.status(204).send('Ok')
-    }catch (err){
+    }catch (err:any){
       res.status(404).send(err.meta.cause)
     }
 })
 
-module.exports = router
+export default categoriesRouter;
