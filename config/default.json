@@ -9,7 +9,7 @@
       "client": {
         "secretToken": "QoBudGGwnZfClrE58wRsMsjtaZgE7rhS",
         "secretTokenLifetime": 86400,
-        "refrehToken": "kcFaA28lBmH2chpzuqN1q27CybaAITtk",
+        "secretRefrehToken": "kcFaA28lBmH2chpzuqN1q27CybaAITtk",
         "refreshLifetime": "2hr"
       }
     }

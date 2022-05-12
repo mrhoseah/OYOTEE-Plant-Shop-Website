@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@prisma/client": "^3.12.0",
+    "@shinshin86/local-storage-mock": "^0.0.3",
     "@types/jsonwebtoken": "^8.5.8",
     "bcryptjs": "^2.4.3",
     "config": "^3.3.7",

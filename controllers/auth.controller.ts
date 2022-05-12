@@ -6,13 +6,13 @@ const prisma = new PrismaClient()
 
 export const signup =async (req:any,res:any) => {
     try {
-      const {name,email,password,products} = req.body
+      const {name,email,password,avatar,products} = req.body
       
       const productData = products?.map((product: Prisma.ProductCreateInput) => {
         return { name: product?.name, description: product?.description,categoryId: product?.category ,authorId: product?.author }
       }) 
       // Save User to Database   
-      const newUser:User= await prisma.user.create({
+      const newUser = await prisma.user.create({
         data:{
           name,
           email,
@@ -54,15 +54,15 @@ export const signin = async(req:any, res:any) => {
         message: "Failed!, Invalid credentials!"
       });
     }
- 
+    const  accessToken =generateToken(user)
     res.status(200).send({
       id: user.id,
       name: user.name,
       email: user.email,
-      accessToken: generateToken(user)
+      accessToken: accessToken
     });
   } catch (error:any) {
-      res.status(500).send({ message: error.meta.cause});
+      res.status(500).send(error.message);
   }
 
 };
