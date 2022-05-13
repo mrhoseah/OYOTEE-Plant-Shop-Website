@@ -15,8 +15,8 @@ export function generateToken(user:User) {
 export function verifyToken (req:any, res:any, next:any){
   
     const {secretToken} = config.get('App.client');
-    const token = req.body.token || req.query.token || req.headers['authorization'].replace("Bearer ", "");
-
+    const token = req.headers['authorization'].replace("Bearer ", "")
+ 
     if (!token) {
       return res.status(403).send({"message":"Failed,Access denied"});
     }
