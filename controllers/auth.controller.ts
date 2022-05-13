@@ -1,7 +1,11 @@
 import * as bcrypt from "bcryptjs";
 import {User,Prisma, PrismaClient } from "@prisma/client";
 import { generateToken } from '../middleware/auth';
+import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 
+const window = {
+  localStorage: getLocalStorageMock(),
+};
 const prisma = new PrismaClient()
 
 export const signup =async (req:any,res:any) => {
@@ -16,6 +20,7 @@ export const signup =async (req:any,res:any) => {
         data:{
           name,
           email,
+          avatar,
           password: bcrypt.hashSync(password, 10),
           products: {
             create: productData,
@@ -30,39 +35,40 @@ export const signup =async (req:any,res:any) => {
       "avatar": newUser.avatar
   });
     } catch (error:any) {
-        res.status(500).send({ message: error.meta.cause });
+        res.status(500).send(error.message );
     }
 };
-export const signin = async(req:any, res:any) => {
+export const signin = async(req:any, response:any) => {
   try {
-     const {email,password} = req.body
+    const {email,password} = req.body
     const user = await prisma.user.findUnique({
-      where: {
-        email
+        where: {
+          email
+        },
+      })
+      if (!user) {
+        throw new Error("Failed!, Invalid credentials!");
       }
-    })
-    if (!user) {
-      return res.status(404).send({ message: "Failed!, Invalid credentials!"});
-    }
-    const passwordIsValid = bcrypt.compareSync(
-      password,
-      user.password
-    );
-    if (!passwordIsValid) {
-      return res.status(401).send({
-        accessToken: null,
-        message: "Failed!, Invalid credentials!"
-      });
-    }
-    const  accessToken =generateToken(user)
-    res.status(200).send({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      accessToken: accessToken
-    });
+      const passwordIsValid = bcrypt.compareSync(
+        password,
+        user.password
+      );
+      if (!passwordIsValid) {
+        throw new Error("Failed!, Invalid credentials!");
+      }
+      const  accessToken =generateToken(user)
+      const publicUser = {
+        id:user.id,
+        name:user.name,
+        email:user.email,
+        profile_photo_url:user.avatar
+      }
+      response.status(200).json({"accessToken":accessToken });
   } catch (error:any) {
-      res.status(500).send(error.message);
+    response.status(401).json(error.message)
   }
-
 };
+export const signout = async(req:any,res:any,next:any)=>{
+  res.status(200).json({"message":"Ok"})
+  return next();
+}

@@ -7,7 +7,7 @@ const authRouter = Router()
 
 authRouter.post(`/signin`,controller.signin)
 
-authRouter.post(`/signup`, [checkEmptyFields,checkDuplicateEmail,verifyToken],controller.signup)
-// authRouter.post(`/signout`,[verifyToken],controller.signout)
+authRouter.post(`/signup`, [checkEmptyFields,checkDuplicateEmail],controller.signup)
+authRouter.post(`/signout`,controller.signout)
   
  export default authRouter;

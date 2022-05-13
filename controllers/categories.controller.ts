@@ -5,11 +5,10 @@ const prisma = new PrismaClient()
 
 export const listing=async (req:any, res:any) => {
   try{
-
     const categories = await prisma.category.findMany()
-    res.json(categories)
+    res.status(200).json(categories)
   }catch (error:any){
-    res.status(401).send({"message":error.meta.cuase})
+    res.status(404).send(error.message)
   }
 }
 export const create =async (req:any, res:any) => {
@@ -20,7 +19,7 @@ export const create =async (req:any, res:any) => {
         const takenCategory = await prisma.category.findUnique({where:{ name }});
     
         if (takenCategory) {
-          return res.status(409).send("Category already exist.");
+          throw new Error("Category already exist.");
         }
       const result = await prisma.category.create({
         data: {
@@ -28,9 +27,9 @@ export const create =async (req:any, res:any) => {
           description
         },
       })
-      res.status(201).send(result)
+      res.status(201).json({"message":"Ok"})
     }catch (error:any){
-      res.status(409).send({"message":error.meta.cuase})
+      res.send(error.message)
     }
 }
 
@@ -41,9 +40,9 @@ export const update= async (req:any, res:any) => {
     const category = await prisma.category.findUnique({
       where: { id: Number(id) },
     })
-    res.json(category)
+    res.status(200).json(category)
   } catch (error:any) {
-    res.status(404).send({"message":error.meta.cuase})
+    res.send(error.message)
   }
 };
 export const show= async (req:any, res:any) => {
@@ -53,9 +52,9 @@ export const show= async (req:any, res:any) => {
     const category = await prisma.category.findUnique({
       where: { id: Number(id) },
     })
-    res.json(category)
+    res.status(200).json(category)
   } catch (error:any) {
-    res.status(404).send({"message":error.meta.cuase})
+    res.send(error.messagee)
   }
 };
 
@@ -69,6 +68,6 @@ export const destroy = async (req:any, res:any) => {
     })
     res.status(204).send('Ok')
     }catch (err:any){
-      res.status(404).send(err.meta.cause)
+      res.status(404).send(err.message)
     }
 }

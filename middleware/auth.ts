@@ -13,26 +13,26 @@ export function generateToken(user:User) {
 }
 
 export function verifyToken (req:any, res:any, next:any){
-  try {
+  
     const {secretToken} = config.get('App.client');
-    const token = req.header('authorization');
+    const token = req.body.token || req.query.token || req.headers['authorization'].replace("Bearer ", "");
 
     if (!token) {
-      return res.status(403).send({"message":"Access denied!"});
+      return res.status(403).send({"message":"Failed,Access denied"});
     }
-    const validToken =token.replace("Bearer ", "")
-    jwt.verify(validToken, secretToken, (err:any, decoded:any) => {
+
+    try {
+    // const validToken =token.replace("Bearer ", "")
+    jwt.verify(token, secretToken, (err:any, decoded:any) => {
       if (err) {
-        return res.status(401).send({
-          message: "Unauthorized!"
-        });
+        return res.status(401).send({"message":"A token is required for authentication"})
       }
-      refreshToken(req.user)
-      req.user = decoded.user;
-      next();
+      // refreshToken(req.user)
+      req.user = decoded;
+      return next();
     });
   } catch (error:any) {
-    return res.status(401).send(error.message)
+    return res.sendStatus(401).json(error.message)
   }
 };
 
@@ -41,15 +41,15 @@ export const checkDuplicateEmail = async (req:any, res:any, next:any) => {
     const{email} = req.body
     const user = await prisma.user.findUnique({
           where: {
-            email:req.body.email
+            email
           }
         })
         if (user) {
-          res.status(409).send({"message":"User Already Exist. Please Login"});
+          throw new Error("User Already Exist. Please Login");
         }
-        next();
+        return next();
     } catch(er:any){
-      res.status(400).send(er.message)
+      res.status(400).json(er.message)
     }
 };
 export const checkEmptyFields = async (req:any, res:any, next:any) => {
@@ -57,10 +57,10 @@ export const checkEmptyFields = async (req:any, res:any, next:any) => {
     const{email,name,password} = req.body
         // Validate user input
         if (!(email && password && name )) {
-          res.status(400).send("All input is required");
+          throw new Error("All input is required");
         }
-        next();
+        return next();
   }catch(er:any){
-    res.status(400).send(er.meta.cause)
+    res.status(400).json(er.message)
   }
 };

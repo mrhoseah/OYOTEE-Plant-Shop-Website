@@ -13,7 +13,7 @@ const userData: Prisma.UserCreateInput[] = [
           name: 'Just him',
           description: 'https://mrhoseah.co.ke',
           published: true,
-              category:{
+          category:{
         create: [
         {
           name: 'Gardening',

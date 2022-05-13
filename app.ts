@@ -1,5 +1,6 @@
 import express from 'express'
 import config from 'config';
+import helmet from  'helmet'
 import cors from 'cors';
 import userRouter from './routes/auth.routes';
 import categoriesRouter from './routes/categories.routes';
@@ -13,19 +14,22 @@ const window = {
 const {port,host,origin} = config.get('App.appConfig');
 
 const app = express()
-
+app.use(helmet());
 app.use(express.json())
 app.use(cors({origin:origin}))
 app.use(express.urlencoded({ extended: true }))
 
 app.get("/", (req, res) => {
-  res.status(200).send({ message: "Welcome to Oyotee shop." });
+  res.send({ message: "Welcome to Oyotee shop." });
 });
 
 app.use('/auth',userRouter);
 
-app.use(function(req, res, next) {
-  res.status(401).send('Please login to get access');
+app.use(function(req, res,next ) {
+  if(JSON.parse(window.localStorage.getItem('accessToken'))){
+    return res.status(401).json({"message":"Please login to get access"});
+  } 
+  return next();
 });
 
 app.use('/categories',categoriesRouter)
