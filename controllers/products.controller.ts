@@ -7,11 +7,20 @@ const upload = multer({ dest: 'uploads/' })
 
 
 export const listing= async (req:any, res:any) => {
-  const { name, description, authorId,categoryId } = req.body
+  const result = await prisma.product.findMany({
+    where: {
+      published:true
+    },
+  })
+  res.json(result)
+}
+export const create= async (req:any, res:any) => {
+  const { name, description,price, authorId,categoryId } = req.body
   const result = await prisma.product.create({
     data: {
       name,
       description,
+      price,
       category: { connect: { id: categoryId } },
       author: { connect: { id: authorId } }
     },
@@ -19,29 +28,10 @@ export const listing= async (req:any, res:any) => {
   res.json(result)
 }
 
-export const create= async (req:any, res:any) => {
-  try {
-    const { id } = req.params
-    const productData = await prisma.product.findUnique({
-      where: { id: Number(id) },
-      select: {
-        published: true,
-      },
-    })
 
-    const updatedProduct = await prisma.product.update({
-      where: { id: Number(id) || undefined },
-      data: { published: !productData?.published },
-    })
-    if(!updatedProduct)res.status(404).send(`Product with ID ${req.body.id} does not exist in the database`)
-    res.json(updatedProduct)
-  } catch (error:any) {
-    res.json({ error: error.meta.cause })
-  }
-}
 export const update= async (req:any, res:any) => {
   try {
-    const { id,name,description,image } = req.params
+    const { id,name,description,image,price } = req.params
     const productData = await prisma.product.findUnique({
       where: { id: Number(id) },
     })
