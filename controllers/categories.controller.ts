@@ -5,12 +5,17 @@ const prisma = new PrismaClient()
 
 export const listing=async (req:any, res:any) => {
   try{
-    const categories = await prisma.category.findMany()
+    const categories = await prisma.category.findMany({
+      include:{
+        products:true
+      }
+    })
     res.status(200).json(categories)
   }catch (error:any){
     res.status(404).send(error.message)
   }
 }
+
 export const create =async (req:any, res:any) => {
   const { name, description } = req.body
 

@@ -51,18 +51,18 @@ model Category {
   products Product[]
 }
 model Like {
-  id    Int     @id @default(autoincrement())
-  products Product @relation(fields:[productId],references:[id])
+  product Product @relation(fields:[productId],references:[id])
   productId Int
   likedBy   User   @relation(fields: [likedById], references: [id])
   likedById Int
+  @@id([likedById,productId])
 }
 model Rating {
-  id    Int     @id @default(autoincrement())
-  products Product @relation(fields:[productId],references:[id])
+  product Product @relation(fields:[productId],references:[id])
   productId Int
   ratedBy   User   @relation(fields: [ratedById], references: [id])
   ratedById Int
+  @@id([ratedById,productId])
 }
 
 model UserToken {

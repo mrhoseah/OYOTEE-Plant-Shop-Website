@@ -52,7 +52,7 @@ export const validateUser = async (req:any, res:any, next:any) => {
       avatar: Joi.string()
   }).options({ abortEarly: false });
 
-  const data= JoiSchema.validate({email},options)
+  const data= JoiSchema.validate({email,name,password,avatar},options)
 
   try{
     if(data.error)
