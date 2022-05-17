@@ -183,15 +183,97 @@ export const rate =async (req:any, res:any) => {
       try{
         const rating = await prisma.rating.create({
           data: {
-                product:{
-                  connect:{id:productId}
-                },
                 ratedBy:{
+                  connect:{id:userId}
+                },
+                product:{
                   connect:{id:userId}
                 }
             },
         });
-        return res.status(201).json({rating})
+        const product = await prisma.product.findUnique({
+          where:{id:productId},
+          select:{
+            id:true,
+            name:true,
+            description:true,
+            price:true,
+            image:true,
+            _count:{
+              select:{
+                ratings:true,
+                likes:true
+              }
+            }
+          }
+        })
+        return res.status(201).json({product})
+      }catch(err:any){
+        return res.status(500).json(err.message)
+      }
+}
+export const like =async (req:any, res:any) => {
+  const { productId,userId } = req.body
+      try{
+        const like = await prisma.like.create({
+          data: {
+                likedBy:{
+                  connect:{id:userId}
+                },
+                product:{
+                  connect:{id:userId}
+                }
+            },
+        });
+        const product = await prisma.product.findUnique({
+          where:{id:productId},
+          select:{
+            id:true,
+            name:true,
+            description:true,
+            price:true,
+            image:true,
+            _count:{
+              select:{
+                ratings:true,
+                likes:true
+              }
+            }
+          }
+        })
+        return res.status(201).json({product})
+      }catch(err:any){
+        return res.status(500).json(err.message)
+      }
+}
+export const dislike =async (req:any, res:any) => {
+  const { productId,userId } = req.body
+      try{
+        const rating = await prisma.like.delete({
+          where: {
+            likedById_productId:{
+              likedById:userId,
+              productId
+            }
+          }  
+        });
+        const product = await prisma.product.findUnique({
+          where:{id:productId},
+          select:{
+            id:true,
+            name:true,
+            description:true,
+            price:true,
+            image:true,
+            _count:{
+              select:{
+                ratings:true,
+                likes:true
+              }
+            }
+          }
+        })
+        return res.status(201).json({product})
       }catch(err:any){
         return res.status(500).json(err.message)
       }
