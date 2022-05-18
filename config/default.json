@@ -1,7 +1,7 @@
 {
     "App": {
       "appConfig": {
-        "host": "http://localhost",
+        "baseurl": "http://localhost",
         "origin": "http://localhost:3000",
         "port": 3030,
         "dbName": "file:./dev.db"
@@ -11,6 +11,14 @@
         "secretTokenLifetime": 86400,
         "secretRefrehToken": "kcFaA28lBmH2chpzuqN1q27CybaAITtk",
         "refreshLifetime": "2hr"
+      },
+      "mail": {
+        "host": "smtp.mailtrap.io",
+        "port": 587,
+        "secure": false,
+        "auth_user": "b2dd9cdc5ce4fd",
+        "auth_password": "1461d6a6bfb7d2",
+        "from_email_address":"hoseahkplgt@gmail.com"
       }
     }
   }

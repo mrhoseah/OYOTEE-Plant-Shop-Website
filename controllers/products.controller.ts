@@ -2,13 +2,11 @@ import { Prisma, PrismaClient } from '@prisma/client'
 import multer from 'multer'
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi, { any } from  'joi'
+import { unlink } from 'fs';
 const window = {
   localStorage: getLocalStorageMock(),
 };
 const prisma = new PrismaClient()
-
-const upload = multer({ dest: 'uploads/' })
-
 
 export const listing= async (req:any, res:any) => {
   const result = await prisma.product.findMany({
@@ -47,6 +45,7 @@ export const create= async (req:any, res:any) => {
 
   const data= JoiSchema.validate({name,description,image,price,category},options)
   try {
+    console.log(req.file.path)
         if(data.error){
           return res.status(400).json(data.error.details);
         }
@@ -55,7 +54,7 @@ export const create= async (req:any, res:any) => {
               name,
               description,
               price,
-              image,
+              image:req.file.path,
               category: { connect: { id: category } },
               author: { connect: { id: authorId } }
             }
@@ -66,19 +65,25 @@ export const create= async (req:any, res:any) => {
       }
 }
 
-export const update= async (req:any, res:any) => {
+export const update=  async (req:any, res:any) => {
   try {
+   console.log( req.file.path)
     const { id,name,description,image,price } = req.params
     const productData = await prisma.product.findUnique({
       where: { id: Number(id) },
     })
 
+    // if(req.file){
+    //   unlink('./'+productData?.image,(err)=>{
+    //     if(err) throw new Error(err.message)
+    //   });
+    // }
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) || undefined },
-      data: { published: !productData?.published },
+      data: { description,name,image:req.file&&req.file.path,price},
     })
-    if(!updatedProduct)res.status(404).send(`Product with ID ${req.body.id} does not exist in the database`)
-    res.json(updatedProduct)
+    if(!updatedProduct) throw new Error(`Product with ID ${req.body.id} does not exist in the database`)
+    res.status(200).json({message:"success"})
   } catch (error:any) {
     res.json({ error: error.meta.cause })
   }
@@ -181,7 +186,18 @@ export const search = async (req:any, res:any) => {
 export const rate =async (req:any, res:any) => {
   const { productId,userId } = req.body
       try{
-        const rating = await prisma.rating.create({
+        const rated = await prisma.rating.findUnique({
+          where: {
+            ratedById_productId:{
+              ratedById:userId,
+              productId
+            }
+          }  
+        });
+        if(rated) {
+          throw new Error("You have already rated this product")
+        }
+        await prisma.rating.create({
           data: {
                 ratedBy:{
                   connect:{id:userId}
@@ -209,47 +225,13 @@ export const rate =async (req:any, res:any) => {
         })
         return res.status(201).json({product})
       }catch(err:any){
-        return res.status(500).json(err.message)
+        return res.status(500).json({message:err.message})
       }
 }
 export const like =async (req:any, res:any) => {
   const { productId,userId } = req.body
       try{
-        const like = await prisma.like.create({
-          data: {
-                likedBy:{
-                  connect:{id:userId}
-                },
-                product:{
-                  connect:{id:userId}
-                }
-            },
-        });
-        const product = await prisma.product.findUnique({
-          where:{id:productId},
-          select:{
-            id:true,
-            name:true,
-            description:true,
-            price:true,
-            image:true,
-            _count:{
-              select:{
-                ratings:true,
-                likes:true
-              }
-            }
-          }
-        })
-        return res.status(201).json({product})
-      }catch(err:any){
-        return res.status(500).json(err.message)
-      }
-}
-export const dislike =async (req:any, res:any) => {
-  const { productId,userId } = req.body
-      try{
-        const rating = await prisma.like.delete({
+        const liked = await prisma.like.findUnique({
           where: {
             likedById_productId:{
               likedById:userId,
@@ -257,6 +239,27 @@ export const dislike =async (req:any, res:any) => {
             }
           }  
         });
+        if(!liked){
+          const like = await prisma.like.create({
+            data: {
+                  likedBy:{
+                    connect:{id:userId}
+                  },
+                  product:{
+                    connect:{id:userId}
+                  }
+              },
+          });
+        }else{
+          await prisma.like.delete({
+            where: {
+              likedById_productId:{
+                likedById:userId,
+                productId
+              }
+            }  
+          });
+        }
         const product = await prisma.product.findUnique({
           where:{id:productId},
           select:{

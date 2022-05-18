@@ -6,8 +6,16 @@ const prisma = new PrismaClient()
 export const listing=async (req:any, res:any) => {
   try{
     const categories = await prisma.category.findMany({
-      include:{
-        products:true
+      select:{
+        id:true,
+        name:true,
+        description:true,
+        products:{
+          select:{
+            id:true,
+            name:true
+          },
+        }
       }
     })
     res.status(200).json(categories)

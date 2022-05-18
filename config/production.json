@@ -1,7 +1,8 @@
 {
     "App": {
       "appConfig": {
-        "host": "http://localhost",
+        "name":"Oyotee Tree Shop - @mrhoseah",
+        "baseurl": "http://localhost",
         "origin": "http://localhost:3000",
         "port": 3030,
         "dbName": "file:./dev.db"
@@ -9,6 +10,14 @@
       "client": {
         "secret": "Uc0Sum9LgMhwAzgcsm15ZhMq0Qi0gt6p",
         "refreshLifetime": 86400
+      },
+      "mail": {
+        "host": "smtp.mailtrap.io",
+        "port": 587,
+        "secure": false,
+        "auth_user": "b2dd9cdc5ce4fd",
+        "auth_password": "1461d6a6bfb7d2",
+        "from_email_address":"hoseahkplgt@gmail.com"
       }
     }
   }
