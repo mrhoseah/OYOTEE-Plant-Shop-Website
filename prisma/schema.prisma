@@ -13,14 +13,14 @@ model Product {
   description   String?
   otherDetails  String?
   image   String? 
+  photo Image?
   quantity  Int @default(0)
   price  Float @default(0.00)
   published Boolean @default(false)
   category    Category  @relation(fields: [categoryId], references: [id])
   categoryId  Int
   author   User @relation(fields: [authorId], references: [id])
-  coupon  Coupon?
-  couponId  Int?
+  coupons  CouponOnProducts[]
   authorId Int
   likes Like[]
   ratings Rating[]
@@ -29,19 +29,27 @@ model Product {
   updatedAt DateTime?
 
 }
+model Image {
+  id     Int     @id @default(autoincrement())
+  url    String?
+  profile   Profile?    @relation(fields: [profileId], references: [id])
+  profileId Int?
+  product Product @relation(fields: [productId],references: [id])
+  productId Int
+
+}
 model Profile {
   id     Int     @id @default(autoincrement())
   bio    String?
   user   User    @relation(fields: [userId], references: [id])
   userId Int     @unique
-
+  avatar Image?
 }
 model Coupon {
   id     Int     @id @default(autoincrement())
   name    String?
   code  String
-  product Product @relation(fields: [productId],references: [id])
-  productId Int
+  products CouponOnProducts[]
   discount Decimal
   discountStatus  Boolean @default(false)
   originalPrice Decimal
@@ -50,6 +58,13 @@ model Coupon {
   expiryDate    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime?
+}
+model CouponOnProducts{
+  product Product @relation(fields: [productId], references: [id])
+  productId Int
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  couponId Int
+  @@id([productId,couponId])
 }
 model User {
   id    Int  @id @default(autoincrement())
@@ -88,10 +103,13 @@ model Rating {
 }
 model Review {
   id Int @id @default(autoincrement())
+  name String
+  description String
   product Product @relation(fields:[productId],references:[id])
   productId Int
   reviewedBy   User   @relation(fields: [reviewedById], references: [id])
   reviewedById Int
+  createdAt DateTime @default(now())
 }
 
 model AccessToken {

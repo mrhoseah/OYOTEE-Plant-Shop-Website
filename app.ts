@@ -9,7 +9,7 @@ import productsRouter from './routes/products.routes';
 import usersRouter from './routes/users.routes';
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import couponRouter from './routes/coupons.routes';
-import reviewsRouter from './routes/reviewss.routes';
+import reviewsRouter from './routes/reviews.routes';
 
 const window = {
   localStorage: getLocalStorageMock(),

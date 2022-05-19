@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client'
 import multer from 'multer'
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi, { any } from  'joi'
-import { unlink } from 'fs';
+import { unlink, unlinkSync } from 'fs';
 const window = {
   localStorage: getLocalStorageMock(),
 };
@@ -73,11 +73,9 @@ export const update=  async (req:any, res:any) => {
       where: { id: Number(id) },
     })
 
-    // if(req.file){
-    //   unlink('./'+productData?.image,(err)=>{
-    //     if(err) throw new Error(err.message)
-    //   });
-    // }
+    if(req.file){
+      unlinkSync('public/../'+productData?.image);
+    }
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) || undefined },
       data: { description,name,image:req.file&&req.file.path,price},
