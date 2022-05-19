@@ -103,7 +103,7 @@ export const signin = async(req:any, response:any) => {
           email:user.email,
           profile_photo_url:user.avatar
         }
-        response.status(200).json({"accessToken":accessToken,user:publicUser });
+        response.status(200).json({"accessToken":accessToken.token,user:publicUser });
       }
   } catch (error:any) {
     response.status(401).json(error.message)

@@ -22,6 +22,7 @@ app.use(
     extended: true,
   })
 );
+app.use('/public', express.static('public'))
 app.use(helmet());
 app.use(express.json())
 app.use(cors({origin:origin}))

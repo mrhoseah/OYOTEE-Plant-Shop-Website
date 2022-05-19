@@ -10,21 +10,12 @@ export const listing =async (req:any,res:any) => {
                 id:true,
                 name:true,
                 code:true,
-                product:true,
                 discount:true,
-                originalPrice:true,
-                newPrice:true,
-                products:{
-                    select:{
-                      id:true,
-                      name:true,
-                      description:true,
-                      image:true,
-                      _count:{
-                        select:{ratings:true,likes:true}
-                      }
-                    },
-                  }
+                startDate:true,
+                expiryDate:true,
+                _count:{
+                  select:{products:true}
+                }
             }
         })
     } catch (error:any) {
@@ -50,22 +41,7 @@ export const show =async (req:any,res:any) => {
             throw new Error(`Coupon with ID ${id} does not exist`);
         }
          const coupon = await prisma.coupon.findUnique({
-            where:{ id},
-            select:{
-                id:true,
-                name:true,
-                code:true,
-                product:true,
-                discount:true,
-                originalPrice:true,
-                newPrice:true,
-                products:{
-                    select:{
-                      id:true,
-                      name:true,
-                    },
-                  }
-            }
+            where:{ id}
         })
         res.status(200).json(coupon)
     } catch (error:any) {
@@ -73,9 +49,9 @@ export const show =async (req:any,res:any) => {
     }
 }
 export const create =async (req:any,res:any) => {
-    const{name,discount,startDate,expiryDate,code,productId}=req.body
+    const{name,discount,startDate,expiryDate,code}=req.body
     try {
-        const data = {name,discount,startDate,expiryDate,code,productId};
+        const data = {name,discount,startDate,expiryDate,code};
 
         // check if coupon already exist
         // Validate if coupon exist in our database
@@ -84,20 +60,20 @@ export const create =async (req:any,res:any) => {
         {  
           return res.status(500).send(response.error.details)
         }
-        const isCouponCreated = await prisma.coupon.findUnique({where:{ productId}});
+        const isCouponCreated = await prisma.coupon.findFirst({where:{ code}});
         
         if (isCouponCreated) {
           throw new Error("Coupon already exist.");
         }
+
         await prisma.coupon.create({
-          data: {
+          data:{
             name,
-            code,
-            product:{connect:{id:productId}},
             discount,
-            originalPrice:isCouponCreated.price,
-            newPrice:isCouponCreated-discount
-          },
+            startDate,
+            expiryDate,
+            code
+          }
         })
         return res.status(201).json({message:"Coupon created"})
     } catch (error:any) {
@@ -105,9 +81,9 @@ export const create =async (req:any,res:any) => {
     }
 }
 export const update =async (req:any,res:any) => {
-    const{id,name,discount,startDate,expiryDate,code,productId}=req.body
+    const{id,name,discount,startDate,expiryDate,code}=req.body
     try {
-        const data = {id,name,discount,startDate,expiryDate,code,productId};
+        const data = {id,name,discount,startDate,expiryDate,code};
 
         // check if coupon already exist
         // Validate if coupon exist in our database
@@ -117,7 +93,7 @@ export const update =async (req:any,res:any) => {
           return res.status(500).send(response.error.details)
         }
         const coupon = await prisma.coupon.findUnique({where:{ id}});
-        
+       
         if (!coupon) {
           throw new Error(`Coupon with ID ${id} does not exist`);
         }
@@ -128,9 +104,7 @@ export const update =async (req:any,res:any) => {
           data: {
             name,
             code,
-            product:{connect:{id:productId}},
             discount,
-            newPrice:coupon-discount
           },
         })
         return res.status(201).json({message:"Coupon updated"})

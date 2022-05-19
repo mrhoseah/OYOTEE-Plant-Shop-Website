@@ -10,18 +10,7 @@ export const list=async (req:any, res:any) => {
         id:true,
         name:true,
         email:true,
-        avatar:true,
-        products:{
-          select:{
-            id:true,
-            name:true,
-            description:true,
-            image:true,
-            _count:{
-              select:{ratings:true,likes:true}
-            }
-          }
-        }
+        avatar:true
       }
     }
     )
@@ -83,13 +72,14 @@ export const deleteProfile = async (req:any,res:any) => {
       res.status(404).send(err.meta.cause)
     }
 }
-export const updateProfile = async (req:any,res:any) => {
+export const updateUser = async (req:any,res:any) => {
   try{
     const { id } = req.params
+    console.log(req.file)
     const {name,email} = req.body
-    const user = await prisma.profile.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
-        id: Number(id),
+        id:Number(id),
       },
     });
     if(!user){
@@ -97,7 +87,7 @@ export const updateProfile = async (req:any,res:any) => {
     }
     const updatedUser = await prisma.user.update({
       where:{
-        id
+        id:Number(id),
       },
       data:{
         name,
@@ -113,7 +103,7 @@ export const updateProfile = async (req:any,res:any) => {
         "avatar": updatedUser.avatar
     });
     }catch (err:any){
-      return res.status(404).send({message:err.message})
+      return res.status(404).send({error:err.message})
     }
 }
 export const destroy = async (req:any,res:any) => {
@@ -134,6 +124,6 @@ export const destroy = async (req:any,res:any) => {
     })
     return res.status(204).send({'message':'Ok'})
     }catch (err:any){
-      return res.status(404).send({message:err.message})
+      return res.status(404).send({error:err.message})
     }
 }

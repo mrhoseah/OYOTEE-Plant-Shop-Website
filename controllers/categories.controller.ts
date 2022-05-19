@@ -9,13 +9,7 @@ export const listing=async (req:any, res:any) => {
       select:{
         id:true,
         name:true,
-        description:true,
-        products:{
-          select:{
-            id:true,
-            name:true
-          },
-        }
+        description:true
       }
     })
     res.status(200).json(categories)

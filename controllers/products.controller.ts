@@ -1,8 +1,8 @@
 import { Prisma, PrismaClient } from '@prisma/client'
-import multer from 'multer'
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
-import Joi, { any } from  'joi'
-import { unlink, unlinkSync } from 'fs';
+import Joi from  'joi'
+import {  unlinkSync } from 'fs';
+import { ratings } from './users.controller';
 const window = {
   localStorage: getLocalStorageMock(),
 };
@@ -19,7 +19,8 @@ export const listing= async (req:any, res:any) => {
       _count:{
         select:{
           ratings:true,
-          likes:true
+          likes:true,
+
         }
       }
     }
@@ -73,9 +74,9 @@ export const update=  async (req:any, res:any) => {
       where: { id: Number(id) },
     })
 
-    if(req.file){
-      unlinkSync('public/../'+productData?.image);
-    }
+    // if(req.file){
+    //   unlinkSync('public/../'+productData?.image);
+    // }
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) || undefined },
       data: { description,name,image:req.file&&req.file.path,price},
@@ -101,9 +102,9 @@ export const publish= async (req:any, res:any) => {
       data: { published: !productData?.published },
     })
     if(!updatedProduct)res.status(404).send(`Product with ID ${req.body.id} does not exist in the database`)
-    res.json(updatedProduct)
+    res.status(201).json(updatedProduct)
   } catch (error:any) {
-    res.json({ error: error.meta.cause })
+    res.status(400).json({error:error.message  })
   }
 }
 export const drafts= async (req:any, res:any) => {
@@ -116,8 +117,8 @@ export const drafts= async (req:any, res:any) => {
       })
 
     res.json(drafts)
-  }catch (err){
-    res.status(400).send(err)
+  }catch (error:any){
+    res.status(400).json({error:error.message  })
   }
 }
 
@@ -141,10 +142,30 @@ export const show=async (req:any, res:any) => {
 
     const product = await prisma.product.findUnique({
       where: { id: Number(id) },
+      select:{
+        id:true,
+        name:true,
+        description:true,
+        price:true,
+        image:true,
+        reviews:{
+          select:{
+            id:true,
+            name:true,
+            description:true
+          }
+        },
+        _count:{
+          select:{
+            ratings:true,
+            likes:true
+          }
+        }
+      }
     })
     res.json(product)
   }catch (err:any){
-    res.status(404).send(err)
+    res.status(400).json({error:err.message  })
   }
 }
 
@@ -177,7 +198,7 @@ export const search = async (req:any, res:any) => {
     res.json(products)
   }
   catch(err:any){
-    res.status(400).send(err)
+    res.status(400).json({error:err.message  })
   }
 }
 
@@ -223,7 +244,7 @@ export const rate =async (req:any, res:any) => {
         })
         return res.status(201).json({product})
       }catch(err:any){
-        return res.status(500).json({message:err.message})
+        return res.status(500).json({error:err.message})
       }
 }
 export const like =async (req:any, res:any) => {
@@ -276,6 +297,6 @@ export const like =async (req:any, res:any) => {
         })
         return res.status(201).json({product})
       }catch(err:any){
-        return res.status(500).json(err.message)
+        res.status(500).json({error:err.message  })
       }
 }

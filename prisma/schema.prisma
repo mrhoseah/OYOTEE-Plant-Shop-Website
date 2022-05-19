@@ -12,8 +12,7 @@ model Product {
   name     String
   description   String?
   otherDetails  String?
-  image   String? 
-  photo Image?
+  image String
   quantity  Int @default(0)
   price  Float @default(0.00)
   published Boolean @default(false)
@@ -29,21 +28,12 @@ model Product {
   updatedAt DateTime?
 
 }
-model Image {
-  id     Int     @id @default(autoincrement())
-  url    String?
-  profile   Profile?    @relation(fields: [profileId], references: [id])
-  profileId Int?
-  product Product @relation(fields: [productId],references: [id])
-  productId Int
 
-}
 model Profile {
   id     Int     @id @default(autoincrement())
   bio    String?
   user   User    @relation(fields: [userId], references: [id])
   userId Int     @unique
-  avatar Image?
 }
 model Coupon {
   id     Int     @id @default(autoincrement())
@@ -52,8 +42,6 @@ model Coupon {
   products CouponOnProducts[]
   discount Decimal
   discountStatus  Boolean @default(false)
-  originalPrice Decimal
-  newPrice  Decimal
   startDate    DateTime?
   expiryDate    DateTime?
   createdAt DateTime @default(now())

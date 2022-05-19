@@ -11,7 +11,7 @@ export const listing =async (req:any,res:any) => {
                 name:true,
                 description:true,
                 reviewedBy:{select:{id:true,name:true,avatar:true}},
-                products:{
+                product:{
                     select:{
                       id:true,
                       name:true
@@ -52,7 +52,7 @@ export const show =async (req:any,res:any) => {
                     id:true,name:true,avatar:true
                   }
                 },
-                products:{
+                product:{
                     select:{
                       id:true,
                       name:true
@@ -77,7 +77,7 @@ export const create =async (req:any,res:any) => {
         {  
           return res.status(500).send(response.error.details)
         }
-        const isReviewCreated = await prisma.review.findUnique({where:{ productId,userId}});
+        const isReviewCreated = await prisma.review.findFirst({where:{ productId,reviewedById:userId}});
         
         if (isReviewCreated) {
           throw new Error("Your review on this product already exist.");
@@ -85,7 +85,13 @@ export const create =async (req:any,res:any) => {
         await prisma.review.create({
           data: {
             name,
-            description
+            description,
+            reviewedBy:{
+              connect:{id:userId}
+            },
+            product:{
+              connect:{id:productId}
+            }
           },
         })
         return res.status(201).json({message:"Review created"})
@@ -96,7 +102,7 @@ export const create =async (req:any,res:any) => {
 export const update =async (req:any,res:any) => {
     const{id,name,description,userId,productId}=req.body
     try {
-        const data = {id,name,discount,startDate,expiryDate,code,productId};
+        const data = {id,name,description,productId};
 
         // check if Review already exist
         // Validate if Review exist in our database
