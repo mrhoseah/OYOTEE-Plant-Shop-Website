@@ -1,5 +1,5 @@
 import * as bcrypt from "bcryptjs";
-import {User,Prisma, PrismaClient } from "@prisma/client";
+import {PrismaClient } from "@prisma/client";
 import { generateToken } from '../middleware/auth';
 import crypto from "crypto";
 import config from 'config'
