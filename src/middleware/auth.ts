@@ -1,14 +1,14 @@
 import * as jwt from "jsonwebtoken";
 import config from 'config';
-import {User, PrismaClient } from "@prisma/client";
+import {PrismaClient } from "@prisma/client";
 import Joi, { any } from  'joi'
 const prisma = new PrismaClient()
 
-export function refreshToken(user:User) {
+export function refreshToken(user:any) {
   const {refreshToken,refreshLifetime} = config.get('App.client');
   return jwt.sign({ user },  refreshToken,{ expiresIn:refreshLifetime})
 }
-export function generateToken(user:User) {
+export function generateToken(user:any) {
   const {secretToken,secretTokenLifetime} = config.get('App.client');
   return jwt.sign({ user },  secretToken,{ expiresIn:secretTokenLifetime})
 }
