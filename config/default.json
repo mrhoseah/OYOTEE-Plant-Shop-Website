@@ -2,7 +2,7 @@
     "App": {
       "appConfig": {
         "baseurl": "http://localhost",
-        "origin": "http://localhost:3000",
+        "whitelistOrigin": ["http://localhost:3000"],
         "port": 3030,
         "dbName": "file:./dev.db"
       },

@@ -10,22 +10,26 @@ import usersRouter from './routes/users.routes';
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import couponRouter from './routes/coupons.routes';
 import reviewsRouter from './routes/reviews.routes';
+import path from 'path';
 
 const window = {
   localStorage: getLocalStorageMock(),
 };
 const {port,baseurl,origin} = config.get('App.appConfig');
-
 const app = express()
+const corsOptions = {
+  credentials: true,
+  origin:"http://localhost:3000",
+}
 app.use(
   bodyParser.urlencoded({
     extended: true,
   })
 );
-app.use('/public', express.static('public'))
+app.use(express.static('public'))
 app.use(helmet());
 app.use(express.json())
-app.use(cors({origin:origin}))
+app.use(cors(corsOptions))
 app.use(express.urlencoded({ extended: true }))
 
 app.get("/", (req, res) => {

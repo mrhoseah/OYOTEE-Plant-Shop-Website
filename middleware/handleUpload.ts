@@ -1,16 +1,15 @@
 import multer from  'multer'
+import path from 'path';
 
 const productStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, './public/products/');
+      cb(null, 'public/images');
     },
-    filename: (req, file, cb) => {
-      const fileName = file.originalname.toLowerCase().split(' ').join('-');
-      cb(null, fileName)
-    }
+    filename: function (req, file, callback) {
+      callback(null, `${new Date().getTime().toString()}-${file.fieldname}${path.extname(file.originalname)}`);}
   });
 
-export const productImageUpload= multer({
+  export const productImageUpload= multer({
     storage:productStorage,
     fileFilter: (req, file, cb) => {
       if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg") {
@@ -20,16 +19,16 @@ export const productImageUpload= multer({
         return cb(new Error('Only .png, .jpg and .jpeg .svg format allowed!'));
       }
     }
-  }).single('image');
+  }).single("image");
+
 
 const userStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, './public/avatars/');
+      cb(null, 'public/avatars');
     },
-    filename: (req, file, cb) => {
-      const fileName = file.originalname.toLowerCase().split(' ').join('-');
-      cb(null, fileName)
-    }
+    filename: function (req, file, callback) {
+      callback(null, `${new Date().getTime().toString()}-${file.fieldname}${path.extname(file.originalname)}`);
+    } 
 });
 
 export const userAvatarUpload= multer({

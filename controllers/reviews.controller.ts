@@ -10,7 +10,14 @@ export const listing =async (req:any,res:any) => {
                 id:true,
                 name:true,
                 description:true,
-                reviewedBy:{select:{id:true,name:true,avatar:true}},
+                reviewedBy:{
+                  select:{
+                    id:true,
+                    name:true,
+                    profile:{
+                      select:{avatar:true}
+                    }
+                  }},
                 product:{
                     select:{
                       id:true,
@@ -49,9 +56,12 @@ export const show =async (req:any,res:any) => {
                 description:true,
                 reviewedBy:{
                   select:{
-                    id:true,name:true,avatar:true
-                  }
-                },
+                    id:true,
+                    name:true,
+                    profile:{
+                      select:{avatar:true}
+                    }
+                  }},
                 product:{
                     select:{
                       id:true,

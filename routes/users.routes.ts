@@ -10,7 +10,8 @@ usershRouter.get(`/`,[verifyToken],controller.list)
 usershRouter.get(`/products/:id/likes`,[verifyToken],controller.likes)
 usershRouter.get(`/products/:id/earings`,[verifyToken],controller.ratings)
 usershRouter.get(`/profile/:id`,[verifyToken],controller.profile)
-usershRouter.put(`/:id/update`,[verifyToken,userAvatarUpload], controller.updateUser)
+usershRouter.put(`/:id/update`,[verifyToken], controller.updateUser)
+usershRouter.put(`/:id/profile/update`,[verifyToken,userAvatarUpload], controller.updateProfile)
 usershRouter.delete(`/:id`,[verifyToken], controller.destroy)
   
  export default usershRouter;

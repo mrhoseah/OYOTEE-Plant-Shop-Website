@@ -1,8 +1,8 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi from  'joi'
-import {  unlinkSync } from 'fs';
-import { ratings } from './users.controller';
+import {  existsSync, unlink } from 'fs';
+import path from 'path';
 const window = {
   localStorage: getLocalStorageMock(),
 };
@@ -15,7 +15,7 @@ export const listing= async (req:any, res:any) => {
       name:true,
       description:true,
       price:true,
-      image:true,
+      image_path:true,
       _count:{
         select:{
           ratings:true,
@@ -28,7 +28,7 @@ export const listing= async (req:any, res:any) => {
   res.status(200).json(result)
 }
 export const create= async (req:any, res:any) => {
-  const { name, description,price,image, authorId,category } = req.body
+  const { name, description,price,image, authorId,category ,quantity} = req.body
   const options = {
     errors: {
       wrap: {
@@ -40,13 +40,12 @@ export const create= async (req:any, res:any) => {
       price: Joi.number().required(),
       name: Joi.string().min(3).required(),
       description: Joi.string().required(),
-      image: Joi.string().required(),
+      quantity: Joi.number().required(),
       category: Joi.number().required()
   }).options({ abortEarly: false });
 
-  const data= JoiSchema.validate({name,description,image,price,category},options)
+  const data= JoiSchema.validate({name,description,price,category,quantity},options)
   try {
-    console.log(req.file.path)
         if(data.error){
           return res.status(400).json(data.error.details);
         }
@@ -54,34 +53,42 @@ export const create= async (req:any, res:any) => {
           data: {
               name,
               description,
-              price,
-              image:req.file.path,
-              category: { connect: { id: category } },
-              author: { connect: { id: authorId } }
+              price:Number(price),
+              quantity:Number(quantity),
+              image:req.file.filename,
+              image_path:req.file.path.split('\\').slice(1).join('\\'),
+              category: { connect: { id: Number(category) } },
+              author: { connect: { id: Number(authorId) } }
             }
           });
           return res.status(201).json({id:result.id,name:result.name,description:result.description,image:result.image,price:result.price})
       } catch (error:any) {
-        return res.status(400).json(error.message)
+        return res.status(400).json({Error:error.message})
       }
 }
 
 export const update=  async (req:any, res:any) => {
   try {
-   console.log( req.file.path)
-    const { id,name,description,image,price } = req.params
+    const { id,name,description,price,quantity } = req.params
     const productData = await prisma.product.findUnique({
       where: { id: Number(id) },
     })
-
-    // if(req.file){
-    //   unlinkSync('public/../'+productData?.image);
-    // }
+    if(!productData) {
+      throw new Error(`Product with ID ${req.body.id} does not exist in the database`)
+    }
+    const oldImage =path.resolve(__dirname, '../', 'public/products/')
+    if(existsSync(oldImage+productData?.image)){
+      unlink(oldImage+productData?.image,(err)=>{
+        if(err){
+          throw new Error(err.message)
+        }
+      });
+    }
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) || undefined },
-      data: { description,name,image:req.file&&req.file.path,price},
+      data: { description,name,image:req.file&&req.file.filename,image_path:req.file&&req.file.path,price,quantity},
     })
-    if(!updatedProduct) throw new Error(`Product with ID ${req.body.id} does not exist in the database`)
+    
     res.status(200).json({message:"success"})
   } catch (error:any) {
     res.json({ error: error.meta.cause })
@@ -147,7 +154,7 @@ export const show=async (req:any, res:any) => {
         name:true,
         description:true,
         price:true,
-        image:true,
+        image_path:true,
         reviews:{
           select:{
             id:true,
@@ -203,7 +210,7 @@ export const search = async (req:any, res:any) => {
 }
 
 export const rate =async (req:any, res:any) => {
-  const { productId,userId } = req.body
+  const { productId,userId,value } = req.body
       try{
         const rated = await prisma.rating.findUnique({
           where: {
@@ -218,6 +225,7 @@ export const rate =async (req:any, res:any) => {
         }
         await prisma.rating.create({
           data: {
+                value,
                 ratedBy:{
                   connect:{id:userId}
                 },
@@ -259,13 +267,13 @@ export const like =async (req:any, res:any) => {
           }  
         });
         if(!liked){
-          const like = await prisma.like.create({
+          await prisma.like.create({
             data: {
                   likedBy:{
                     connect:{id:userId}
                   },
                   product:{
-                    connect:{id:userId}
+                    connect:{id:productId}
                   }
               },
           });
@@ -283,13 +291,8 @@ export const like =async (req:any, res:any) => {
           where:{id:productId},
           select:{
             id:true,
-            name:true,
-            description:true,
-            price:true,
-            image:true,
             _count:{
               select:{
-                ratings:true,
                 likes:true
               }
             }

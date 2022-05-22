@@ -22,31 +22,32 @@ const options = {
   };
   export const signup =async (req:any,res:any) => {
   
-      const {name,email,password,avatar,products} = req.body
-      const user ={name,email,password,avatar};
+      const {name,email,password,products} = req.body
+      const user ={name,email,password};
        try {
-          const productData = products?.map((product: Prisma.ProductCreateInput) => {
-            return { name: product?.name, description: product?.description,categoryId: product?.category ,authorId: product?.author }
-          }) 
+          // const productData = products?.map((product: Prisma.ProductCreateInput) => {
+          //   return { name: product?.name, description: product?.description,categoryId: product?.category ,authorId: product?.author }
+          // }) 
       // Save User to Database  
           const newUser = await prisma.user.create({
             data:{
               name,
               email,
-              avatar:req.file.path,
               password: bcrypt.hashSync(password, 10),
-              products: {
-                create: productData,
+              profile: {
+                create:{
+                    bio:`${name}'s bio`
+                  }
               },
+            },
+            select:{
+              id:true,
+              name:true,
+              email:true
             }
         })
 
-        return res.status(201).send({
-          "id": newUser.id ,
-          "email": newUser.email ,
-          "name": newUser.name,
-          "avatar": newUser.avatar
-      });
+        return res.status(201).send(newUser);
     } catch (error:any) {
         res.status(500).send(error.message );
     }
@@ -73,6 +74,17 @@ export const signin = async(req:any, response:any) => {
           where: {
             email
           },
+          select:{
+            id:true,
+            password:true,
+            name:true,
+            email:true,
+            profile:{
+              select:{
+                avatar:true
+              }
+            }
+          }
         })
         if (!user) {
           throw new Error("Failed!, Invalid credentials!");
@@ -97,13 +109,12 @@ export const signin = async(req:any, response:any) => {
             token:true
           }
         })
-        const publicUser = {
-          id:user.id,
-          name:user.name,
-          email:user.email,
-          profile_photo_url:user.avatar
-        }
-        response.status(200).json({"accessToken":accessToken.token,user:publicUser });
+        response.status(200).json({"accessToken":accessToken.token,user:{
+            id:user.id,
+            name:user.name,
+            email:user.email,
+            profile_photo_url:user.profile
+        } });
       }
   } catch (error:any) {
     response.status(401).json(error.message)
