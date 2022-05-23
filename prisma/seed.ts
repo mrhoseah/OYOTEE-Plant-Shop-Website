@@ -13,15 +13,8 @@ const userData: Prisma.UserCreateInput[] = [
           name: 'Just him',
           description: 'https://mrhoseah.co.ke',
           published: true,
-          category:{
-        create: [
-        {
-          name: 'Gardening',
-          description: 'Gardening'
-        },
-      ],
-    }
-        },
+          category:2
+        }
       ],
     },
   },
@@ -30,6 +23,9 @@ const productData: Prisma.ProductCreateInput[] = [
   {
     name: 'Just him',
     description: 'https://mrhoseah.co.ke',
+    price:123.0,
+    quantity:10,
+    image:'',
     published: true,
     category:{
         create: [
