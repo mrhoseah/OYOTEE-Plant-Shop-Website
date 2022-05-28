@@ -9,8 +9,6 @@ import productsRouter from './routes/products.routes';
 import usersRouter from './routes/users.routes';
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import couponRouter from './routes/coupons.routes';
-import reviewsRouter from './routes/reviews.routes';
-import path from 'path';
 
 const window = {
   localStorage: getLocalStorageMock(),
@@ -48,7 +46,6 @@ app.use(function(req, res,next ) {
 app.use('/categories',categoriesRouter)
 app.use('/coupons',couponRouter)
 app.use('/products',productsRouter)
-app.use('/reviews',reviewsRouter)
 app.use('/users',usersRouter)
 
 

@@ -8,7 +8,6 @@ const productsRouter = Router()
 
 productsRouter.get(`/`,controller.listing)
 productsRouter.post(`/create`,[productImageUpload,verifyToken],controller.create)
-productsRouter.post(`/rating`,controller.rate)
 productsRouter.post(`/like`,controller.like)
 productsRouter.get(`/:id`,controller.show)
 productsRouter.put(`/:id/publish/`, [verifyToken],controller.publish)

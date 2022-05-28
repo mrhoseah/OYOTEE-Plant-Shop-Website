@@ -12,7 +12,7 @@ const productStorage = multer.diskStorage({
   export const productImageUpload= multer({
     storage:productStorage,
     fileFilter: (req, file, cb) => {
-      if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg") {
+      if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg" || file.mimetype == "image/webp") {
         cb(null, true);
       } else {
         cb(null, false);
