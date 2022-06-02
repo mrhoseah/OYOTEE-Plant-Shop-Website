@@ -16,6 +16,13 @@ export const listing= async (req:any, res:any) => {
       description:true,
       price:true,
       categoryId:true,
+      reviews:{
+        select:{
+          id:true,
+          content:true,
+          rateValue:true
+        }
+      },
       image_path:true,
       _count:{
         select:{
