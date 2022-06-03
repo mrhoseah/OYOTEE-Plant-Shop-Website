@@ -3,23 +3,23 @@ import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi from  'joi'
 import {  existsSync, unlink } from 'fs';
 import path from 'path';
+import e from 'cors';
 const window = {
   localStorage: getLocalStorageMock(),
 };
 const prisma = new PrismaClient()
 
 export const listing= async (req:any, res:any) => {
-  const result = await prisma.product.findMany({
+  const products = await prisma.product.findMany({
     select:{
       id:true,
       name:true,
       description:true,
       price:true,
       categoryId:true,
+      rating:true,
       reviews:{
         select:{
-          id:true,
-          content:true,
           rateValue:true
         }
       },
@@ -33,9 +33,12 @@ export const listing= async (req:any, res:any) => {
       }
     }
   })
-
-  res.status(200).json(result)
+  products.forEach(function (element) {
+    element.rating=element._count.reviews>0?(element.reviews.map(({ rateValue }) => rateValue).reduce((a,b)=>a+b,0))/element._count.reviews:0
+  });
+  res.status(200).json(products)
 }
+
 export const create= async (req:any, res:any) => {
   const { name, description,price,image, authorId,category ,quantity} = req.body
   const options = {
@@ -259,6 +262,55 @@ export const like =async (req:any, res:any) => {
           }
         })
         return res.status(201).json({product})
+      }catch(err:any){
+        res.status(500).json({error:err.message  })
+      }
+}
+export const review =async (req:any, res:any) => {
+  const { productId,userId,content,rating } = req.body
+      try{
+        const rated = await prisma.review.findUnique({
+          where: {
+           reviewedById_productId:{
+             productId,
+             reviewedById:userId
+           }
+          }  
+        });
+        if(rated){
+          await prisma.review.update({
+            where: {
+              reviewedById_productId:{
+                productId,
+                reviewedById:userId
+              }
+             }, 
+            data:{
+              reviewedBy:{
+                connect:{id:userId}
+              },
+              product:{
+                connect:{id:productId}
+              },
+              content,
+              rateValue:parseFloat(rating)
+            },
+          });
+        }else{
+          await prisma.review.create({
+            data:{
+              reviewedBy:{
+                connect:{id:userId}
+              },
+              product:{
+                connect:{id:productId}
+              },
+              content,
+              rateValue:parseFloat(rating)
+            }  
+          });
+        }
+        return res.status(201).json({message:'success'})
       }catch(err:any){
         res.status(500).json({error:err.message  })
       }

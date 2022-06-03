@@ -17,7 +17,7 @@ var productStorage = multer_1["default"].diskStorage({
 exports.productImageUpload = (0, multer_1["default"])({
     storage: productStorage,
     fileFilter: function (req, file, cb) {
-        if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg") {
+        if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg" || file.mimetype == "image/webp") {
             cb(null, true);
         }
         else {

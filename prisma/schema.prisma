@@ -24,6 +24,7 @@ model Product {
   coupons  CouponOnProducts[]
   authorId Int
   likes Like[]
+  rating Float @default(0)
   reviews Review[]
   createdAt DateTime @default(now())
   updatedAt DateTime?
@@ -85,12 +86,13 @@ model Like {
 model Review {
   id Int @id @default(autoincrement())
   content String
-  rateValue Int
+  rateValue Float
   product Product @relation(fields:[productId],references:[id])
   productId Int
   reviewedBy   User   @relation(fields: [reviewedById], references: [id])
   reviewedById Int
   createdAt DateTime @default(now())
+  @@unique([reviewedById,productId])
 }
 
 model AccessToken {

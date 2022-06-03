@@ -50,7 +50,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.like = exports.rate = exports.search = exports.show = exports.destroy = exports.drafts = exports.publish = exports.update = exports.create = exports.listing = void 0;
+exports.review = exports.like = exports.show = exports.destroy = exports.drafts = exports.publish = exports.update = exports.create = exports.listing = void 0;
 var client_1 = require("@prisma/client");
 var local_storage_mock_1 = require("@shinshin86/local-storage-mock");
 var joi_1 = __importDefault(require("joi"));
@@ -61,7 +61,7 @@ var window = {
 };
 var prisma = new client_1.PrismaClient();
 var listing = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var result;
+    var products;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, prisma.product.findMany({
@@ -70,18 +70,31 @@ var listing = function (req, res) { return __awaiter(void 0, void 0, void 0, fun
                         name: true,
                         description: true,
                         price: true,
+                        categoryId: true,
+                        rating: true,
+                        reviews: {
+                            select: {
+                                rateValue: true
+                            }
+                        },
                         image_path: true,
                         _count: {
                             select: {
-                                ratings: true,
+                                reviews: true,
                                 likes: true
                             }
                         }
                     }
                 })];
             case 1:
-                result = _a.sent();
-                res.status(200).json(result);
+                products = _a.sent();
+                products.forEach(function (element) {
+                    element.rating = element._count.reviews > 0 ? (element.reviews.map(function (_a) {
+                        var rateValue = _a.rateValue;
+                        return rateValue;
+                    }).reduce(function (a, b) { return a + b; }, 0)) / element._count.reviews : 0;
+                });
+                res.status(200).json(products);
                 return [2 /*return*/];
         }
     });
@@ -162,7 +175,7 @@ var update = function (req, res) { return __awaiter(void 0, void 0, void 0, func
                 }
                 return [4 /*yield*/, prisma.product.update({
                         where: { id: Number(id) || undefined },
-                        data: { description: description, name: name, image: req.file && req.file.filename, image_path: req.file && req.file.path, price: price, quantity: quantity }
+                        data: { description: description, name: name, image: req.file && req.file.filename, image_path: req.file && req.file.path.split('\\').slice(1).join('\\'), price: price, quantity: quantity }
                     })];
             case 2:
                 updatedProduct = _b.sent();
@@ -262,12 +275,19 @@ var destroy = function (req, res) { return __awaiter(void 0, void 0, void 0, fun
 }); };
 exports.destroy = destroy;
 var show = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, product, err_2;
+    var id, averagereviews, product, err_2;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 2, , 3]);
+                _a.trys.push([0, 3, , 4]);
                 id = req.params.id;
+                return [4 /*yield*/, prisma.review.aggregate({
+                        where: {
+                            productId: id
+                        }
+                    })];
+            case 1:
+                averagereviews = _a.sent();
                 return [4 /*yield*/, prisma.product.findUnique({
                         where: { id: Number(id) },
                         select: {
@@ -276,135 +296,58 @@ var show = function (req, res) { return __awaiter(void 0, void 0, void 0, functi
                             description: true,
                             price: true,
                             image_path: true,
-                            reviews: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                    description: true
-                                }
-                            },
                             _count: {
                                 select: {
-                                    ratings: true,
+                                    reviews: true,
                                     likes: true
                                 }
                             }
                         }
                     })];
-            case 1:
-                product = _a.sent();
-                res.json(product);
-                return [3 /*break*/, 3];
             case 2:
+                product = _a.sent();
+                res.json(__assign(__assign({}, product), { avg_review: averagereviews }));
+                return [3 /*break*/, 4];
+            case 3:
                 err_2 = _a.sent();
                 res.status(400).json({ error: err_2.message });
-                return [3 /*break*/, 3];
-            case 3: return [2 /*return*/];
+                return [3 /*break*/, 4];
+            case 4: return [2 /*return*/];
         }
     });
 }); };
 exports.show = show;
-var search = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, searchString, skip, take, orderBy, or, products, err_3;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _b.trys.push([0, 2, , 3]);
-                _a = req.query, searchString = _a.searchString, skip = _a.skip, take = _a.take, orderBy = _a.orderBy;
-                or = searchString
-                    ? {
-                        OR: [
-                            { name: { contains: searchString } },
-                            { description: { contains: searchString } },
-                        ]
-                    }
-                    : {};
-                return [4 /*yield*/, prisma.product.findMany({
-                        where: __assign({ published: true }, or),
-                        include: { author: true },
-                        take: Number(take) || undefined,
-                        skip: Number(skip) || undefined,
-                        orderBy: {
-                            updatedAt: orderBy
-                        }
-                    })];
-            case 1:
-                products = _b.sent();
-                res.json(products);
-                return [3 /*break*/, 3];
-            case 2:
-                err_3 = _b.sent();
-                res.status(400).json({ error: err_3.message });
-                return [3 /*break*/, 3];
-            case 3: return [2 /*return*/];
-        }
-    });
-}); };
-exports.search = search;
-var rate = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, productId, userId, value, rated, product, err_4;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _a = req.body, productId = _a.productId, userId = _a.userId, value = _a.value;
-                _b.label = 1;
-            case 1:
-                _b.trys.push([1, 5, , 6]);
-                return [4 /*yield*/, prisma.rating.findUnique({
-                        where: {
-                            ratedById_productId: {
-                                ratedById: userId,
-                                productId: productId
-                            }
-                        }
-                    })];
-            case 2:
-                rated = _b.sent();
-                if (rated) {
-                    throw new Error("You have already rated this product");
-                }
-                return [4 /*yield*/, prisma.rating.create({
-                        data: {
-                            value: value,
-                            ratedBy: {
-                                connect: { id: userId }
-                            },
-                            product: {
-                                connect: { id: userId }
-                            }
-                        }
-                    })];
-            case 3:
-                _b.sent();
-                return [4 /*yield*/, prisma.product.findUnique({
-                        where: { id: productId },
-                        select: {
-                            id: true,
-                            name: true,
-                            description: true,
-                            price: true,
-                            image: true,
-                            _count: {
-                                select: {
-                                    ratings: true,
-                                    likes: true
-                                }
-                            }
-                        }
-                    })];
-            case 4:
-                product = _b.sent();
-                return [2 /*return*/, res.status(201).json({ product: product })];
-            case 5:
-                err_4 = _b.sent();
-                return [2 /*return*/, res.status(500).json({ error: err_4.message })];
-            case 6: return [2 /*return*/];
-        }
-    });
-}); };
-exports.rate = rate;
+// export const search = async (req:any, res:any) => {
+//   try{
+//   const { searchString, skip, take, orderBy } = req.query
+//   const or: Prisma.ProductWhereInput = searchString
+//     ? {
+//         OR: [
+//           { name: { contains: searchString as string } },
+//           { description: { contains: searchString as string } },
+//         ],
+//       }
+//     : {}
+//   const products = await prisma.product.findMany({
+//     where: {
+//       published: true,
+//       ...or,
+//     },
+//     include: { author: true },
+//     take: Number(take) || undefined,
+//     skip: Number(skip) || undefined,
+//     orderBy: {
+//       updatedAt: orderBy as Prisma.SortOrder,
+//     },
+//   })
+//     res.json(products)
+//   }
+//   catch(err:any){
+//     res.status(400).json({error:err.message  })
+//   }
+// }
 var like = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, productId, userId, liked, product, err_5;
+    var _a, productId, userId, liked, product, err_3;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -462,12 +405,78 @@ var like = function (req, res) { return __awaiter(void 0, void 0, void 0, functi
                 product = _b.sent();
                 return [2 /*return*/, res.status(201).json({ product: product })];
             case 8:
-                err_5 = _b.sent();
-                res.status(500).json({ error: err_5.message });
+                err_3 = _b.sent();
+                res.status(500).json({ error: err_3.message });
                 return [3 /*break*/, 9];
             case 9: return [2 /*return*/];
         }
     });
 }); };
 exports.like = like;
+var review = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, productId, userId, content, rating, rated, err_4;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.body, productId = _a.productId, userId = _a.userId, content = _a.content, rating = _a.rating;
+                _b.label = 1;
+            case 1:
+                _b.trys.push([1, 7, , 8]);
+                return [4 /*yield*/, prisma.review.findUnique({
+                        where: {
+                            reviewedById_productId: {
+                                productId: productId,
+                                reviewedById: userId
+                            }
+                        }
+                    })];
+            case 2:
+                rated = _b.sent();
+                if (!rated) return [3 /*break*/, 4];
+                return [4 /*yield*/, prisma.review.update({
+                        where: {
+                            reviewedById_productId: {
+                                productId: productId,
+                                reviewedById: userId
+                            }
+                        },
+                        data: {
+                            reviewedBy: {
+                                connect: { id: userId }
+                            },
+                            product: {
+                                connect: { id: productId }
+                            },
+                            content: content,
+                            rateValue: parseFloat(rating)
+                        }
+                    })];
+            case 3:
+                _b.sent();
+                return [3 /*break*/, 6];
+            case 4: return [4 /*yield*/, prisma.review.create({
+                    data: {
+                        reviewedBy: {
+                            connect: { id: userId }
+                        },
+                        product: {
+                            connect: { id: productId }
+                        },
+                        content: content,
+                        rateValue: parseFloat(rating)
+                    }
+                })];
+            case 5:
+                _b.sent();
+                _b.label = 6;
+            case 6: return [2 /*return*/, res.status(201).json({ message: 'success' })];
+            case 7:
+                err_4 = _b.sent();
+                res.status(500).json({ error: err_4.message });
+                return [3 /*break*/, 8];
+            case 8: return [2 /*return*/];
+        }
+    });
+}); };
+exports.review = review;
 //# sourceMappingURL=products.controller.js.map

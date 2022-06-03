@@ -14,7 +14,6 @@ var products_routes_1 = __importDefault(require("./routes/products.routes"));
 var users_routes_1 = __importDefault(require("./routes/users.routes"));
 var local_storage_mock_1 = require("@shinshin86/local-storage-mock");
 var coupons_routes_1 = __importDefault(require("./routes/coupons.routes"));
-var reviews_routes_1 = __importDefault(require("./routes/reviews.routes"));
 var window = {
     localStorage: (0, local_storage_mock_1.getLocalStorageMock)()
 };
@@ -45,7 +44,6 @@ app.use(function (req, res, next) {
 app.use('/categories', categories_routes_1["default"]);
 app.use('/coupons', coupons_routes_1["default"]);
 app.use('/products', products_routes_1["default"]);
-app.use('/reviews', reviews_routes_1["default"]);
 app.use('/users', users_routes_1["default"]);
 var server = app.listen(port, function () {
     return console.log("\n\uD83D\uDE80 Server ready at: ".concat(baseurl, ":").concat(port, "\n\u2B50\uFE0F Made with \u2764\uFE0F with Prisma: http://prisma.io"));
