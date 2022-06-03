@@ -278,24 +278,7 @@ export const review =async (req:any, res:any) => {
           }  
         });
         if(rated){
-          await prisma.review.update({
-            where: {
-              reviewedById_productId:{
-                productId,
-                reviewedById:userId
-              }
-             }, 
-            data:{
-              reviewedBy:{
-                connect:{id:userId}
-              },
-              product:{
-                connect:{id:productId}
-              },
-              content,
-              rateValue:parseFloat(rating)
-            },
-          });
+          throw new Error ("You have already reviewed this product")
         }else{
           await prisma.review.create({
             data:{

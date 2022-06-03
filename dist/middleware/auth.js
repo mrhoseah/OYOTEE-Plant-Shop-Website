@@ -64,28 +64,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 exports.validateUser = exports.verifyToken = exports.generateToken = exports.refreshToken = void 0;
 var jwt = __importStar(require("jsonwebtoken"));
-var config_1 = __importDefault(require("config"));
 var client_1 = require("@prisma/client");
 var joi_1 = __importDefault(require("joi"));
+var dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1["default"].config();
 var prisma = new client_1.PrismaClient();
 function refreshToken(user) {
-    var _a = config_1["default"].get('App.client'), refreshToken = _a.refreshToken, refreshLifetime = _a.refreshLifetime;
-    return jwt.sign({ user: user }, refreshToken, { expiresIn: refreshLifetime });
+    return jwt.sign({ user: user }, process.env.SECRET_REFRESH_TOKEN, { expiresIn: '86400' });
 }
 exports.refreshToken = refreshToken;
 function generateToken(user) {
-    var _a = config_1["default"].get('App.client'), secretToken = _a.secretToken, secretTokenLifetime = _a.secretTokenLifetime;
-    return jwt.sign({ user: user }, secretToken, { expiresIn: secretTokenLifetime });
+    return jwt.sign({ user: user }, process.env.SECRET_TOKEN, { expiresIn: '86400' });
 }
 exports.generateToken = generateToken;
 function verifyToken(req, res, next) {
-    var secretToken = config_1["default"].get('App.client').secretToken;
     if (req.headers['authorization'] == undefined || req.headers['authorization'] == null) {
         return res.status(403).send({ message: "Auth failed" });
     }
     var token = req.headers['authorization'].replace("Bearer ", "");
     try {
-        jwt.verify(token, secretToken, function (err, decoded) {
+        jwt.verify(token, process.env.SECRET_TOKEN, function (err, decoded) {
             if (err) {
                 return res.status(401).send({ message: "Unauthorized" });
             }

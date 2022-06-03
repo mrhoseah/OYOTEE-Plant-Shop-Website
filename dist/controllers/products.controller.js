@@ -421,7 +421,7 @@ var review = function (req, res) { return __awaiter(void 0, void 0, void 0, func
                 _a = req.body, productId = _a.productId, userId = _a.userId, content = _a.content, rating = _a.rating;
                 _b.label = 1;
             case 1:
-                _b.trys.push([1, 7, , 8]);
+                _b.trys.push([1, 6, , 7]);
                 return [4 /*yield*/, prisma.review.findUnique({
                         where: {
                             reviewedById_productId: {
@@ -432,29 +432,9 @@ var review = function (req, res) { return __awaiter(void 0, void 0, void 0, func
                     })];
             case 2:
                 rated = _b.sent();
-                if (!rated) return [3 /*break*/, 4];
-                return [4 /*yield*/, prisma.review.update({
-                        where: {
-                            reviewedById_productId: {
-                                productId: productId,
-                                reviewedById: userId
-                            }
-                        },
-                        data: {
-                            reviewedBy: {
-                                connect: { id: userId }
-                            },
-                            product: {
-                                connect: { id: productId }
-                            },
-                            content: content,
-                            rateValue: parseFloat(rating)
-                        }
-                    })];
-            case 3:
-                _b.sent();
-                return [3 /*break*/, 6];
-            case 4: return [4 /*yield*/, prisma.review.create({
+                if (!rated) return [3 /*break*/, 3];
+                throw new Error("You have already reviewed this product");
+            case 3: return [4 /*yield*/, prisma.review.create({
                     data: {
                         reviewedBy: {
                             connect: { id: userId }
@@ -466,15 +446,15 @@ var review = function (req, res) { return __awaiter(void 0, void 0, void 0, func
                         rateValue: parseFloat(rating)
                     }
                 })];
-            case 5:
+            case 4:
                 _b.sent();
-                _b.label = 6;
-            case 6: return [2 /*return*/, res.status(201).json({ message: 'success' })];
-            case 7:
+                _b.label = 5;
+            case 5: return [2 /*return*/, res.status(201).json({ message: 'success' })];
+            case 6:
                 err_4 = _b.sent();
                 res.status(500).json({ error: err_4.message });
-                return [3 /*break*/, 8];
-            case 8: return [2 /*return*/];
+                return [3 /*break*/, 7];
+            case 7: return [2 /*return*/];
         }
     });
 }); };

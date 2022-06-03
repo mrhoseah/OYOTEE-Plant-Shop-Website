@@ -2,11 +2,10 @@ import * as bcrypt from "bcryptjs";
 import {PrismaClient } from "@prisma/client";
 import { generateToken } from '../middleware/auth';
 import crypto from "crypto";
-import config from 'config'
+import 'dotenv/config'
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi from  'joi'
 import { sendMail } from "./mail.controller";
-const {baseurl,port} = config.get('App.appConfig');
 
 const window = {
   localStorage: getLocalStorageMock(),
@@ -146,7 +145,7 @@ export const forgotPassword = async (req:any,res:any) => {
           });
       }
 
-      const link = `${baseurl}:${port}/auth/reset-password/${token.token}`;
+      const link = `${process.env.APP_BASEURL}:${process.env.APP_PORT}/auth/reset-password/${token.token}`;
       await sendMail(user.email, "Password reset - Oyotee Tree Shop", link);
 
       res.send("password reset link sent to your email account");

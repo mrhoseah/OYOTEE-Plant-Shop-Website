@@ -1,5 +1,5 @@
 import express from 'express'
-import config from 'config';
+import 'dotenv/config'
 import helmet from  'helmet'
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -13,11 +13,11 @@ import couponRouter from './routes/coupons.routes';
 const window = {
   localStorage: getLocalStorageMock(),
 };
-const {port,baseurl,origin} = config.get('App.appConfig');
+
 const app = express()
 const corsOptions = {
   credentials: true,
-  origin:"http://localhost:3000",
+  origin:process.env.WHITELISTORIGIN,
 }
 app.use(
   bodyParser.urlencoded({
@@ -49,8 +49,8 @@ app.use('/products',productsRouter)
 app.use('/users',usersRouter)
 
 
-const server = app.listen(port, () =>
+const server = app.listen(process.env.APP_PORT, () =>
   console.log(`
-🚀 Server ready at: ${baseurl}:${port}
+🚀 Server ready at: ${process.env.APP_BASEURL}:${process.env.APP_PORT}
 ⭐️ Made with ❤️ with Prisma: http://prisma.io`),
 )

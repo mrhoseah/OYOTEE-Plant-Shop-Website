@@ -67,11 +67,10 @@ var bcrypt = __importStar(require("bcryptjs"));
 var client_1 = require("@prisma/client");
 var auth_1 = require("../middleware/auth");
 var crypto_1 = __importDefault(require("crypto"));
-var config_1 = __importDefault(require("config"));
+require("dotenv/config");
 var local_storage_mock_1 = require("@shinshin86/local-storage-mock");
 var joi_1 = __importDefault(require("joi"));
 var mail_controller_1 = require("./mail.controller");
-var _a = config_1["default"].get('App.appConfig'), baseurl = _a.baseurl, port = _a.port;
 var window = {
     localStorage: (0, local_storage_mock_1.getLocalStorageMock)()
 };
@@ -232,7 +231,7 @@ var forgotPassword = function (req, res) { return __awaiter(void 0, void 0, void
                 token = _a.sent();
                 _a.label = 4;
             case 4:
-                link = "".concat(baseurl, ":").concat(port, "/auth/reset-password/").concat(token.token);
+                link = "".concat(process.env.APP_BASEURL, ":").concat(process.env.APP_PORT, "/auth/reset-password/").concat(token.token);
                 return [4 /*yield*/, (0, mail_controller_1.sendMail)(user.email, "Password reset - Oyotee Tree Shop", link)];
             case 5:
                 _a.sent();

@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 var express_1 = __importDefault(require("express"));
-var config_1 = __importDefault(require("config"));
+require("dotenv/config");
 var helmet_1 = __importDefault(require("helmet"));
 var cors_1 = __importDefault(require("cors"));
 var body_parser_1 = __importDefault(require("body-parser"));
@@ -17,11 +17,10 @@ var coupons_routes_1 = __importDefault(require("./routes/coupons.routes"));
 var window = {
     localStorage: (0, local_storage_mock_1.getLocalStorageMock)()
 };
-var _a = config_1["default"].get('App.appConfig'), port = _a.port, baseurl = _a.baseurl, origin = _a.origin;
 var app = (0, express_1["default"])();
 var corsOptions = {
     credentials: true,
-    origin: "http://localhost:3000"
+    origin: process.env.WHITELISTORIGIN
 };
 app.use(body_parser_1["default"].urlencoded({
     extended: true
@@ -45,7 +44,7 @@ app.use('/categories', categories_routes_1["default"]);
 app.use('/coupons', coupons_routes_1["default"]);
 app.use('/products', products_routes_1["default"]);
 app.use('/users', users_routes_1["default"]);
-var server = app.listen(port, function () {
-    return console.log("\n\uD83D\uDE80 Server ready at: ".concat(baseurl, ":").concat(port, "\n\u2B50\uFE0F Made with \u2764\uFE0F with Prisma: http://prisma.io"));
+var server = app.listen(process.env.APP_PORT, function () {
+    return console.log("\n\uD83D\uDE80 Server ready at: ".concat(process.env.APP_BASEURL, ":").concat(process.env.APP_PORT, "\n\u2B50\uFE0F Made with \u2764\uFE0F with Prisma: http://prisma.io"));
 });
 //# sourceMappingURL=app.js.map
