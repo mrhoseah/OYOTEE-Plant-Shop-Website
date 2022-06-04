@@ -1,5 +1,4 @@
 import express from 'express'
-import 'dotenv/config'
 import helmet from  'helmet'
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -9,6 +8,9 @@ import productsRouter from './routes/products.routes';
 import usersRouter from './routes/users.routes';
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import couponRouter from './routes/coupons.routes';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const window = {
   localStorage: getLocalStorageMock(),
