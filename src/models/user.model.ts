@@ -1,4 +1,4 @@
-import type { VerificationToken, Product, User } from "@prisma/client";
+import type { VerificationToken, Password, User } from "@prisma/client";
 import prisma from "../utils/db";
 import crypto from "crypto";
 import * as bcrypt from "bcryptjs";
@@ -15,6 +15,14 @@ export const getTokenByVerificationToken = async (
       userId: true,
     },
   });
+};
+export const getPasswordByUserId = async (userId: User["id"])=> {
+  const userPassword= await prisma.password.findFirst({
+    where: {
+      userId,
+    }
+  });
+  return userPassword?.hash;
 };
 export const getTokenByUserId = async (userId: User["id"]) => {
   return await prisma.verificationToken.findFirst({
