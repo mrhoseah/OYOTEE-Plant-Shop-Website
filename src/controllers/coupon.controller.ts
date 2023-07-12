@@ -1,141 +1,118 @@
-import { PrismaClient } from '@prisma/client'
+import {PrismaClient} from '@prisma/client'
 import {validateCoupon} from '../utils/validator'
+import {Request, Response} from "express";
+import {
+    browseCoupons,
+    createCoupon,
+    deleteCoupon,
+    getCouponByCode,
+    getCouponById,
+    updateCoupon
+} from "../models/coupon.model";
+
 const prisma = new PrismaClient()
 
 
-export const listing =async (req:any,res:any) => {
+export const listing = async (req: Request, res: Response) => {
     try {
-        await prisma.coupon.findMany({
-            select:{
-                id:true,
-                name:true,
-                code:true,
-                discount:true,
-                startDate:true,
-                expiryDate:true,
-                _count:{
-                  select:{products:true}
-                }
-            }
-        })
-    } catch (error:any) {
-        return res.status(404).json({message:error.message})
+        const coupons = await browseCoupons();
+        return res.status(200).json({coupons})
+    } catch (error) {
+        return res.status(404).json({message: (error as Error).message})
     }
 }
-export const show =async (req:any,res:any) => {
-    const {id}= req.body
+export const show = async (req: Request, res: Response) => {
+    const {id} = req.body
     try {
 
         const data = {id};
 
         // check if coupon exist
         // Validate if coupon exist in our database
-        const response =validateCoupon(data)
-        if(response.error)
-        {  
-            return res.status(500).send(response.error.details)
+        const response = validateCoupon(data)
+        if (response.error) {
+            return res.status(403).send(response.error.details)
         }
-        const couponFound = await prisma.coupon.findUnique({where:{ id}});
-        
+        const couponFound = await getCouponById(id);
+
         if (!couponFound) {
             throw new Error(`Coupon with ID ${id} does not exist`);
         }
-         const coupon = await prisma.coupon.findUnique({
-            where:{ id}
-        })
-        res.status(200).json(coupon)
-    } catch (error:any) {
-        return res.status(404).json({message:error.message})
+        return res.status(200).json(coupon)
+    } catch (error) {
+        return res.status(404).json({message: (error as Error).message})
     }
 }
-export const create =async (req:any,res:any) => {
-    const{name,discount,startDate,expiryDate,code}=req.body
+export const create = async (req: Request, res: Response) => {
+    const {name, discount, startDate, expiryDate, code} = req.body
     try {
-        const data = {name,discount,startDate,expiryDate,code};
+        const data = {name, discount, startDate, expiryDate, code};
 
         // check if coupon already exist
         // Validate if coupon exist in our database
-        const response =validateCoupon(data)
-        if(response.error)
-        {  
-          return res.status(500).send(response.error.details)
+        const response = validateCoupon(data)
+        if (response.error) {
+            return res.status(403).send(response.error.details)
         }
-        const isCouponCreated = await prisma.coupon.findFirst({where:{ code}});
-        
+        const isCouponCreated = await getCouponByCode(code);
+
         if (isCouponCreated) {
-          throw new Error("Coupon already exist.");
+            throw new Error("Coupon already exist.");
         }
 
-        await prisma.coupon.create({
-          data:{
+        await createCoupon({
             name,
             discount,
             startDate,
             expiryDate,
             code
-          }
         })
-        return res.status(201).json({message:"Coupon created"})
-    } catch (error:any) {
-        return res.status(400).json({message:error.message})
+        return res.status(201).json({message: "Coupon created"})
+    } catch (error) {
+        return res.status(400).json({message: (error as Error).message})
     }
 }
-export const update =async (req:any,res:any) => {
-    const{id,name,discount,startDate,expiryDate,code}=req.body
+export const update = async (req: Request, res: Response) => {
+    const {id, name, discount, startDate, expiryDate, code} = req.body
     try {
-        const data = {id,name,discount,startDate,expiryDate,code};
+        const data = {id, name, discount, startDate, expiryDate, code};
 
         // check if coupon already exist
         // Validate if coupon exist in our database
-        const response =validateCoupon(data)
-        if(response.error)
-        {  
-          return res.status(500).send(response.error.details)
+        const response = validateCoupon(data)
+        if (response.error) {
+            return res.status(403).send(response.error.details)
         }
-        const coupon = await prisma.coupon.findUnique({where:{ id}});
-       
+        const coupon = await getCouponById(id);
+
         if (!coupon) {
-          throw new Error(`Coupon with ID ${id} does not exist`);
+            throw new Error(`Coupon with ID ${id} does not exist`);
         }
-        await prisma.coupon.update({
-            where:{
-                id
-            },
-          data: {
-            name,
-            code,
-            discount,
-          },
-        })
-        return res.status(201).json({message:"Coupon updated"})
-    } catch (error:any) {
-        return res.status(400).json({message:error.message})
+        await updateCoupon(id, name,discount,code,startDate,expiryDate);
+        return res.status(201).json({message: "Coupon updated"})
+    } catch (error) {
+        return res.status(400).json({message: (error as Error).message})
     }
 }
-export const destroy =async (req:any,res:any) => {
-    const{id}=req.body
+export const destroy = async (req: Request, res: Response) => {
+    const {id} = req.body
     try {
         const data = {id};
 
         // check if coupon already exist
         // Validate if coupon exist in our database
-        const response =validateCoupon(data)
-        if(response.error)
-        {  
-          return res.status(500).send(response.error.details)
+        const response = validateCoupon(data)
+        if (response.error) {
+            return res.status(403).send(response.error.details)
         }
-        const coupon = await prisma.coupon.findUnique({where:{ id}});
-        
+        const coupon = await getCouponById(id);
+
         if (!coupon) {
-          throw new Error(`Coupon with ID ${id} does not exist`);
+            throw new Error(`Coupon with ID ${id} does not exist`);
         }
-        await prisma.coupon.delete({
-            where:{
-                id
-            }
-        })
-        return res.status(204).json({message:"Coupon deleted"})
-    } catch (error:any) {
-        return res.status(400).json({message:error.message})
+        await deleteCoupon((id))
+        return res.status(204).json({message: "Coupon deleted"})
+    } catch (error) {
+        return res.status(400).json({message: (error as Error).message})
     }
 }
