@@ -113,7 +113,7 @@ export const forgotPassword = async (req:any,res:any) => {
 
       const user = await prisma.user.findUnique({ where:{email: req.body.email} });
       if (!user)
-          return res.status(404).send("user with given email doesn't exist");
+          throw new Error("user with given email doesn't exist");
 
       let token = await prisma.passwordToken.findFirst({ 
         where:{
@@ -134,7 +134,7 @@ export const forgotPassword = async (req:any,res:any) => {
       const link = `${process.env.APP_BASEURL}:${process.env.APP_PORT}/auth/reset-password/${token.token}`;
       await sendMail(user.email, "Password reset - Oyotee Tree Shop", link);
 
-      res.send("password reset link sent to your email account");
+      return res.send("password reset link sent to your email account");
   } catch (error) {
       res.send("An error occured");
       console.log(error);
@@ -147,15 +147,7 @@ export const resetPassword =async (req:any,res:any)=>{
     const { error } = schema.validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const userToken = await prisma.passwordToken.findFirst({
-      where:{
-        token: req.query.token,
-      },select:{
-        id:true,
-        token:true,
-        userId:true
-      }
-    });
+
     if (!userToken)throw new Error("Invalid link or expired");
 
     await prisma.user.update({

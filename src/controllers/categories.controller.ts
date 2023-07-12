@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import {validateCategory} from '../helpers/validator'
+import {validateCategory} from '../utils/validator'
 const prisma = new PrismaClient()
 
 
