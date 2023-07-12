@@ -3,6 +3,8 @@ import type{User } from "@prisma/client";
 import Joi, { any } from  'joi'
 import dotenv from 'dotenv';
 import prisma from "./db";
+import {Request,Response,NextFunction} from 'express'
+import { CustomRequest } from "./types";
 
 dotenv.config();
 
@@ -10,11 +12,11 @@ dotenv.config();
 export function refreshToken(user:User) {
   return jwt.sign({ user },  process.env.SECRET_REFRESH_TOKEN as string,{ expiresIn:'86400'})
 }
-export function generateToken(user:any) {
+export function generateToken(user:User) {
   return jwt.sign({ user }, process.env.SECRET_TOKEN as string,{ expiresIn: '86400'})
 }
 
-export function verifyToken (req:any, res:any, next:any){
+export function requireuser (req:Request, res:Response, next:NextFunction){
 
     if (req.headers['authorization'] == undefined || req.headers['authorization'] == null) {
       return res.status(403).send({message:"Auth failed"});
@@ -22,11 +24,11 @@ export function verifyToken (req:any, res:any, next:any){
     const token = req.headers['authorization'].replace("Bearer ", "")
 
     try {
-    jwt.verify(token, process.env.SECRET_TOKEN as string, (err:any, decoded:any) => {
+    jwt.verify(token, process.env.SECRET_TOKEN as string, (err, decoded) => {
       if (err) {
         return res.status(401).send({message:"Unauthorized"})
       }
-      req.user = decoded;
+      (req as CustomRequest).user = decoded;
       return next();
     });
   } catch (error:any) {
@@ -35,7 +37,7 @@ export function verifyToken (req:any, res:any, next:any){
 };
 
 
-export const validateUser = async (req:any, res:any, next:any) => {
+export const validateUser = async (req:Request, res:Response, next:NextFunction) => {
   const{email,name,password,avatar} = req.body
   const options = {
     errors: {
@@ -56,7 +58,7 @@ export const validateUser = async (req:any, res:any, next:any) => {
   try{
     if(data.error)
     {  
-      return res.status(500).json(data.error.details)
+      return res.status(409).json(data.error.details)
     }else{
       const user = await prisma.user.findUnique({
         where: {
@@ -68,7 +70,7 @@ export const validateUser = async (req:any, res:any, next:any) => {
       }
           return next();
     }
-    } catch(er:any){
-      res.status(400).json(er.message)
+    } catch(er){
+    return res.status(400).json((er as Error).message)
     }
 };

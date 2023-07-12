@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import * as controller from '../controllers/categories.controller'
-import { verifyToken } from '../utils/auth';
+import { requireuser } from '../utils/auth';
 
 
 const categoriesRouter = Router()
 
 categoriesRouter.get(`/`,controller.listing)
-categoriesRouter.post(`/`,[verifyToken],controller.create)
+categoriesRouter.post(`/`,[requireuser],controller.create)
 categoriesRouter.get(`/:id`,controller.show)
-categoriesRouter.put(`/update/:id`, [verifyToken],controller.update)
-categoriesRouter.delete(`/destroy/:id`, [verifyToken],controller.destroy)
+categoriesRouter.put(`/update/:id`, [requireuser],controller.update)
+categoriesRouter.delete(`/:id`, [requireuser],controller.destroy)
   
  export default categoriesRouter;

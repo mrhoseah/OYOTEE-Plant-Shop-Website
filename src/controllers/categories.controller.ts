@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client'
 import {validateCategory} from '../utils/validator'
-const prisma = new PrismaClient()
+import { createCategory, deleteCategoryById, getCategoryByName } from '../models/category.models'
+import {Request,Response} from 'express'
+import prisma from '../utils/db'
 
-
-export const listing=async (req:any, res:any) => {
+export const listing=async (req:Request, res:Response) => {
   try{
     const categories = await prisma.category.findMany({
       select:{
@@ -13,12 +13,12 @@ export const listing=async (req:any, res:any) => {
       }
     })
     res.status(200).json(categories)
-  }catch (error:any){
-    res.status(404).send(error.message)
+  }catch (error){
+    res.status(404).send((error as Error).message)
   }
 }
 
-export const create =async (req:any, res:any) => {
+export const create =async (req:Request, res:Response) => {
   const { name, description } = req.body
 
         const data = { name, description };
@@ -27,65 +27,49 @@ export const create =async (req:any, res:any) => {
         // Validate if category exist in our database
         const response =validateCategory(data)
       try{
-        if(response.error)
-        {  
-          res.status(500).send(response.error.details)
-        }
-        else
-        {
-          const takenCategory = await prisma.category.findUnique({where:{ name:response.value.name }});
+          const takenCategory = await getCategoryByName(name);
         
           if (takenCategory) {
-            return res.status(409).json({message:"Category already exist."});
+            throw new Error("Category name already exist");
           }
-          const result = await prisma.category.create({
-            data: {
-              name:response.value.name,
-              description:response.value.description
-            },
-          })
-          return res.status(201).json({message:"Ok"})
-        }
-      }catch(err:any){
-        return res.status(500).json(err.message)
+          const result = await createCategory(name,description)
+          return res.status(201).json({message:"created"})
+      }catch(err){
+        return res.status(403).json((err as Error).message)
       }
 }
 
-export const update= async (req:any, res:any) => {
+export const update= async (req:Request, res:Response) => {
   try {
     const { id } = req.params
 
     const category = await prisma.category.findUnique({
       where: { id: Number(id) },
     })
-    res.status(200).json(category)
-  } catch (error:any) {
-    res.send(error.message)
+    return res.status(200).json(category)
+  } catch (error) {
+    return res.send((error as Error).message)
   }
 };
-export const show= async (req:any, res:any) => {
+export const show= async (req:Request, res:Response) => {
   try {
     const { id } = req.params
 
     const category = await prisma.category.findUnique({
       where: { id: Number(id) },
     })
-    res.status(200).json(category)
+    return res.status(200).json(category)
   } catch (error:any) {
-    res.send(error.messagee)
+    return res.send(error.messagee)
   }
 };
 
-export const destroy = async (req:any, res:any) => {
+export const destroy = async (req:Request, res:Response) => {
   try{
     const { id } = req.params
-    const user = await prisma.category.delete({
-      where: {
-        id: Number(id),
-      },
-    })
-    res.status(204).send('Ok')
-    }catch (err:any){
-      res.status(404).send(err.message)
+    const deletedCategory = await deleteCategoryById(Number(id))
+    return res.status(204).send({message:'deleted'})
+    }catch (err){
+      return res.status(404).send((err as Error).message)
     }
 }

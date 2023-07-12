@@ -21,7 +21,7 @@ const options = {
        try {
       // Save User to Database  
           const newUser = await createUser(name,email,password);
-        return response.status(201).send(newUser);
+        return response.status(201).json(newUser);
     } catch (error) {
         return response.status(500).send((error as Error).message );
     }

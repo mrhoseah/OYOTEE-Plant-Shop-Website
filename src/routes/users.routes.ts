@@ -1,17 +1,17 @@
 import * as controller from '../controllers/users.controller'
 import { Router } from 'express';
 import { userAvatarUpload } from '../middleware/handleUpload';
-import { verifyToken } from '../utils/auth';
+import { requireuser } from '../utils/auth';
 
 
 const usershRouter = Router()
 
-usershRouter.get(`/`,[verifyToken],controller.list)
-usershRouter.get(`/products/:id/likes`,[verifyToken],controller.likes)
-usershRouter.get(`/products/:id/earings`,[verifyToken],controller.ratings)
-usershRouter.get(`/profile/:id`,[verifyToken],controller.profile)
-usershRouter.put(`/:id/update`,[verifyToken], controller.updateUser)
-usershRouter.put(`/:id/profile/update`,[verifyToken,userAvatarUpload], controller.updateProfile)
-usershRouter.delete(`/:id`,[verifyToken], controller.destroy)
+usershRouter.get(`/`,[requireuser],controller.list)
+usershRouter.get(`/products/:id/likes`,[requireuser],controller.likes)
+usershRouter.get(`/products/:id/earings`,[requireuser],controller.ratings)
+usershRouter.get(`/profile/:id`,[requireuser],controller.profile)
+usershRouter.put(`/:id/update`,[requireuser], controller.updateUser)
+usershRouter.put(`/:id/profile/update`,[requireuser,userAvatarUpload], controller.updateProfile)
+usershRouter.delete(`/:id`,[requireuser], controller.destroy)
   
  export default usershRouter;
