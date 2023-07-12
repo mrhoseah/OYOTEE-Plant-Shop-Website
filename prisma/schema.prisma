@@ -13,8 +13,7 @@ model Product {
   name     String
   description   String?
   otherDetails  String?
-  image String
-  image_path String?
+  image_url String?
   quantity  Int @default(0)
   price  Float @default(0.00)
   published Boolean @default(false)

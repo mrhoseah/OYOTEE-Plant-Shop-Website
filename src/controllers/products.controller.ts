@@ -1,46 +1,27 @@
-import { Prisma, PrismaClient } from '@prisma/client'
-import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi from  'joi'
-import {  existsSync, unlink } from 'fs';
-import path from 'path';
-import e from 'cors';
-const window = {
-  localStorage: getLocalStorageMock(),
-};
-const prisma = new PrismaClient()
+import {
+  browseProducts,
+  createProduct, createProductLikesByProductIdByUserId, createProductReview, deleteProductLikesByProductIdByUserId,
+  getProductById, getProductLikesByProductId,
+  getProductReviewsByProductId,
+  publishProduct,
+  updateProduct
+} from "../models/product.model";
+import {Request, Response} from "express";
+import prisma from "../utils/db";
+import {Prisma} from "@prisma/client";
 
-export const listing= async (req:any, res:any) => {
-  const products = await prisma.product.findMany({
-    select:{
-      id:true,
-      name:true,
-      description:true,
-      price:true,
-      categoryId:true,
-      rating:true,
-      reviews:{
-        select:{
-          rateValue:true
-        }
-      },
-      image_path:true,
-      _count:{
-        select:{
-          reviews:true,
-          likes:true,
 
-        }
-      }
-    }
-  })
+export const listing= async (req:Request,res:Response) => {
+  const products = await browseProducts();
   products.forEach(function (element) {
     element.rating=element._count.reviews>0?(element.reviews.map(({ rateValue }) => rateValue).reduce((a,b)=>a+b,0))/element._count.reviews:0
   });
   res.status(200).json(products)
 }
 
-export const create= async (req:any, res:any) => {
-  const { name, description,price,image, authorId,category ,quantity} = req.body
+export const create= async (req:Request,res:Response) => {
+  const { name, description,price,image_url, authorId,categoryId ,quantity} = req.body
   const options = {
     errors: {
       wrap: {
@@ -48,85 +29,54 @@ export const create= async (req:any, res:any) => {
       }
     }
   };
+  //TO BE MOVED TO utils/validation.ts
   const JoiSchema = Joi.object().keys({
       price: Joi.number().required(),
       name: Joi.string().min(3).required(),
       description: Joi.string().required(),
       quantity: Joi.number().required(),
-      category: Joi.number().required()
+    categoryId: Joi.number().required()
   }).options({ abortEarly: false });
 
-  const data= JoiSchema.validate({name,description,price,category,quantity},options)
+  const data= JoiSchema.validate({name,description,price,categoryId,quantity},options)
   try {
         if(data.error){
           return res.status(400).json(data.error.details);
         }
-        const result = await prisma.product.create({
-          data: {
-              name,
-              description,
-              price:Number(price),
-              quantity:Number(quantity),
-              image:req.file.filename,
-              image_path:req.file.path.split('\\').slice(1).join('\\'),
-              category: { connect: { id: Number(category) } },
-              author: { connect: { id: Number(authorId) } }
-            }
-          });
-          return res.status(201).json({id:result.id,name:result.name,description:result.description,image:result.image,price:result.price})
-      } catch (error:any) {
-        return res.status(400).json({Error:error.message})
+        const result = await createProduct({name, description, price, quantity, image_url, categoryId, authorId});
+          return res.status(201).json({data:result})
+      } catch (error) {
+        return res.status(400).json({error: (error as Error).message})
       }
 }
 
-export const update=  async (req:any, res:any) => {
+export const update=  async (req:Request,res:Response) => {
   try {
-    const { id,name,description,price,quantity } = req.params
-    const productData = await prisma.product.findUnique({
-      where: { id: Number(id) },
-    })
+    const { id,name,description,price,quantity,categoryId,image_url } = req.params
+    const productData = await getProductById(Number(id))
     if(!productData) {
       throw new Error(`Product with ID ${req.body.id} does not exist in the database`)
     }
-    const oldImage =path.resolve(__dirname, '../', 'public/products/')
-    if(existsSync(oldImage+productData?.image)){
-      unlink(oldImage+productData?.image,(err)=>{
-        if(err){
-          throw new Error(err.message)
-        }
-      });
-    }
-    const updatedProduct = await prisma.product.update({
-      where: { id: Number(id) || undefined },
-      data: { description,name,image:req.file&&req.file.filename,image_path:req.file&&req.file.path.split('\\').slice(1).join('\\'),price,quantity},
-    })
+    const updatedProduct = await updateProduct({productId:Number(id),name,description,price:Number(price),quantity:Number(quantity),image_url,categoryId:Number(categoryId)})
     
-    res.status(200).json({message:"success"})
-  } catch (error:any) {
-    res.json({ error: error.meta.cause })
+    return res.status(200).json({message:"success"})
+  } catch (error) {
+    return res.json({ error: (error as Error).cause })
   }
 }
-export const publish= async (req:any, res:any) => {
+export const publish= async (req:Request,res:Response) => {
   try {
     const { id } = req.params
-    const productData = await prisma.product.findUnique({
-      where: { id: Number(id) },
-      select: {
-        published: true,
-      },
-    })
+    const productData = await getProductById(Number(id))
 
-    const updatedProduct = await prisma.product.update({
-      where: { id: Number(id) || undefined },
-      data: { published: !productData?.published },
-    })
-    if(!updatedProduct)res.status(404).send(`Product with ID ${req.body.id} does not exist in the database`)
-    res.status(201).json(updatedProduct)
-  } catch (error:any) {
-    res.status(400).json({error:error.message  })
+    const updatedProduct = await publishProduct(Number(id));
+    if(!updatedProduct)return res.status(404).send(`Product with ID ${req.body.id} does not exist in the database`)
+    return res.status(201).json(updatedProduct)
+  } catch (error) {
+    return res.status(400).json({error:(error as Error).message  })
   }
 }
-export const drafts= async (req:any, res:any) => {
+export const drafts= async (req:Request,res:Response) => {
   try{
      const drafts = await prisma.product
       .findMany({
@@ -135,13 +85,13 @@ export const drafts= async (req:any, res:any) => {
         },
       })
 
-    res.json(drafts)
-  }catch (error:any){
-    res.status(400).json({error:error.message  })
+    return res.json(drafts)
+  }catch (error){
+    return res.status(400).json({error:(error as Error).message  })
   }
 }
 
-export const destroy = async (req:any, res:any) => {
+export const destroy = async (req:Request,res:Response) => {
   try{
     const { id } = req.params
     const product = await prisma.product.delete({
@@ -150,151 +100,80 @@ export const destroy = async (req:any, res:any) => {
       },
     })
   res.status(204).send('Ok')
-  }catch (err:any){
-    res.status(404).send(err.meta.cause)
+  }catch (err){
+    res.status(404).send((err as Error).cause)
   }
 }
 
-export const show=async (req:any, res:any) => {
+export const show=async (req:Request, res:Response) => {
   try{
-    const { id } = req.params
-    const averagereviews = await prisma.review.aggregate({
-      where:{
-        productId:id
-      }
-    })
-    const product = await prisma.product.findUnique({
-      where: { id: Number(id) },
-      select:{
-        id:true,
-        name:true,
-        description:true,
-        price:true,
-        image_path:true,
-        _count:{
-          select:{
-            reviews:true,
-            likes:true
-          }
-        }
-      }
-    })
-    res.json({...product,avg_review:averagereviews})
-  }catch (err:any){
-    res.status(400).json({error:err.message  })
+    const { productId } = req.params
+    const averageReviews = await getProductReviewsByProductId(Number(productId))
+    const product = await getProductById(Number(productId))
+    return res.json({...product,avg_review:averageReviews})
+  }catch (err){
+    return res.status(400).json({error:( err as Error).message  })
   }
 }
 
-// export const search = async (req:any, res:any) => {
-//   try{
-//   const { searchString, skip, take, orderBy } = req.query
+export const search = async (req:Request, res:Response) => {
+  try{
+  const { searchString, skip, take, orderBy } = req.query
 
-//   const or: Prisma.ProductWhereInput = searchString
-//     ? {
-//         OR: [
-//           { name: { contains: searchString as string } },
-//           { description: { contains: searchString as string } },
-//         ],
-//       }
-//     : {}
+  const or: Prisma.ProductWhereInput = searchString
+    ? {
+        OR: [
+          { name: { contains: searchString as string } },
+          { description: { contains: searchString as string } },
+        ],
+      }
+    : {}
 
-//   const products = await prisma.product.findMany({
-//     where: {
-//       published: true,
-//       ...or,
-//     },
-//     include: { author: true },
-//     take: Number(take) || undefined,
-//     skip: Number(skip) || undefined,
-//     orderBy: {
-//       updatedAt: orderBy as Prisma.SortOrder,
-//     },
-//   })
+  const products = await prisma.product.findMany({
+    where: {
+      published: true,
+      ...or,
+    },
+    include: { author: true },
+    take: Number(take) || undefined,
+    skip: Number(skip) || undefined,
+    orderBy: {
+      updatedAt: orderBy as Prisma.SortOrder,
+    },
+  })
 
-//     res.json(products)
-//   }
-//   catch(err:any){
-//     res.status(400).json({error:err.message  })
-//   }
-// }
+    return res.json(products)
+  }
+  catch(err){
+    return res.status(400).json({error:(err as Error).message  })
+  }
+}
 
-export const like =async (req:any, res:any) => {
+export const like =async (req:Request,res:Response) => {
   const { productId,userId } = req.body
       try{
-        const liked = await prisma.like.findUnique({
-          where: {
-            likedById_productId:{
-              likedById:userId,
-              productId
-            }
-          }  
-        });
+        const liked  = await getProductLikesByProductId(productId);
         if(!liked){
-          await prisma.like.create({
-            data: {
-                  likedBy:{
-                    connect:{id:userId}
-                  },
-                  product:{
-                    connect:{id:productId}
-                  }
-              },
-          });
+          await createProductLikesByProductIdByUserId(productId,userId);
         }else{
-          await prisma.like.delete({
-            where: {
-              likedById_productId:{
-                likedById:userId,
-                productId
-              }
-            }  
-          });
+          await deleteProductLikesByProductIdByUserId(productId,userId);
         }
-        const product = await prisma.product.findUnique({
-          where:{id:productId},
-          select:{
-            id:true,
-            _count:{
-              select:{
-                likes:true
-              }
-            }
-          }
-        })
-        return res.status(201).json({product})
-      }catch(err:any){
-        res.status(500).json({error:err.message  })
+        return res.status(201).json({liked})
+      }catch(err){
+        return res.status(400).json({error:(err as Error).message  })
       }
 }
-export const review =async (req:any, res:any) => {
+export const review =async (req:Request, res:Response) => {
   const { productId,userId,content,rating } = req.body
       try{
-        const rated = await prisma.review.findUnique({
-          where: {
-           reviewedById_productId:{
-             productId,
-             reviewedById:userId
-           }
-          }  
-        });
+        const rated = await getProductReviewsByProductId(productId);
         if(rated){
           throw new Error ("You have already reviewed this product")
         }else{
-          await prisma.review.create({
-            data:{
-              reviewedBy:{
-                connect:{id:userId}
-              },
-              product:{
-                connect:{id:productId}
-              },
-              content,
-              rateValue:parseFloat(rating)
-            }  
-          });
+          await createProductReview(userId,productId,content,rating);
         }
         return res.status(201).json({message:'success'})
-      }catch(err:any){
-        res.status(500).json({error:err.message  })
+      }catch(err){
+        res.status(500).json({error:(err as Error).message  })
       }
 }
