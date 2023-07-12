@@ -1,11 +1,11 @@
-import type { PasswordToken, Product, User } from "@prisma/client";
+import type { VerificationToken, Product, User } from "@prisma/client";
 import prisma from "../utils/db";
 import crypto from "crypto";
 import * as bcrypt from "bcryptjs";
-export const getTokenByPasswordToken = async (
-  token: PasswordToken["token"]
+export const getTokenByVerificationToken = async (
+  token: VerificationToken["token"]
 ) => {
-  return await prisma.passwordToken.findFirst({
+  return await prisma.verificationToken.findFirst({
     where: {
       token,
     },
@@ -17,7 +17,7 @@ export const getTokenByPasswordToken = async (
   });
 };
 export const getTokenByUserId = async (userId: User["id"]) => {
-  return await prisma.passwordToken.findFirst({
+  return await prisma.verificationToken.findFirst({
     where: {
       userId,
     },
@@ -30,9 +30,9 @@ export const getTokenByUserId = async (userId: User["id"]) => {
 };
 export const createToken = async (
   user: User,
-  token: PasswordToken["token"]
+  token: VerificationToken["token"]
 ) => {
-  return await prisma.passwordToken.create({
+  return await prisma.verificationToken.create({
     data: {
       user: { connect: { id: user.id } },
       token: crypto.randomBytes(32).toString("hex"),
@@ -60,14 +60,18 @@ export const getUserByEmail = async (email: User["email"]) => {
 export const createUser = async (
   name: User["name"],
   email: User["email"],
-  password: User["password"]
+  password: string
 ) => {
   // Save User to Database
   const newUser = await prisma.user.create({
     data: {
       name,
       email,
-      password: bcrypt.hashSync(password, 10),
+      password:{
+        create: {
+          hash: bcrypt.hashSync(password, 10)
+        }
+      },
       profile: {
         create: {
           bio: `${name}'s bio`,
@@ -98,18 +102,18 @@ export const createAccessToken = async (
     }
   })
 };
-export const updateUserById=async(userId:User["id"],password:User["password"])=>{
-    return  await prisma.user.update({
+export const updateUserById=async(userId:User["id"],password:string)=>{
+    return  await prisma.password.update({
         where:{
           id:userId
         },
         data:{
-          password: bcrypt.hashSync(password,10)
+          hash: bcrypt.hashSync(password,10)
         }
       });
 }
-export const deleteTokenAfterUse=async(tokenId:PasswordToken["id"])=>{
-    return  await prisma.passwordToken.delete({
+export const deleteTokenAfterUse=async(tokenId:VerificationToken["id"])=>{
+    return  await prisma.verificationToken.delete({
         where:{
           id:tokenId
         }
