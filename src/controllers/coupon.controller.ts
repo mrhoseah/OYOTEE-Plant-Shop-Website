@@ -38,7 +38,7 @@ export const show = async (req: Request, res: Response) => {
         if (!couponFound) {
             throw new Error(`Coupon with ID ${id} does not exist`);
         }
-        return res.status(200).json(coupon)
+        return res.status(200).json(couponFound)
     } catch (error) {
         return res.status(404).json({message: (error as Error).message})
     }
