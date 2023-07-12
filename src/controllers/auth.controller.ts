@@ -6,6 +6,7 @@ import 'dotenv/config'
 import { getLocalStorageMock } from '@shinshin86/local-storage-mock';
 import Joi from  'joi'
 import { sendMail } from "./mail.controller";
+import { Request, Response } from "express";
 
 const window = {
   localStorage: getLocalStorageMock(),
@@ -19,14 +20,10 @@ const options = {
       abortEarly: false
     }
   };
-  export const signup =async (req:any,res:any) => {
+  export const signup =async (req:Request, response:Response) => {
   
       const {name,email,password,products} = req.body
-      const user ={name,email,password};
        try {
-          // const productData = products?.map((product: Prisma.ProductCreateInput) => {
-          //   return { name: product?.name, description: product?.description,categoryId: product?.category ,authorId: product?.author }
-          // }) 
       // Save User to Database  
           const newUser = await prisma.user.create({
             data:{
@@ -46,12 +43,12 @@ const options = {
             }
         })
 
-        return res.status(201).send(newUser);
-    } catch (error:any) {
-        res.status(500).send(error.message );
+        return response.status(201).send(newUser);
+    } catch (error) {
+        return response.status(500).send((error as Error).message );
     }
 };
-export const signin = async(req:any, response:any) => {
+export const signin = async(req:Request, response:Response) => {
   const {email,password} = req.body
   
   const user ={email,password};
@@ -64,11 +61,6 @@ export const signin = async(req:any, response:any) => {
   const data= JoiSchema.validate(user,options)
 
   try {
-      if(data.error)
-      {  
-        return response.json(response.error.details)
-      }
-      else{
         const user = await prisma.user.findUnique({
           where: {
             email
@@ -108,15 +100,9 @@ export const signin = async(req:any, response:any) => {
             token:true
           }
         })
-        response.status(200).json({"accessToken":accessToken.token,user:{
-            id:user.id,
-            name:user.name,
-            email:user.email,
-            profile_photo_url:user.profile
-        } });
-      }
-  } catch (error:any) {
-    response.status(401).json(error.message)
+        response.status(200).json({"accessToken":accessToken.token});
+  } catch (error) {
+    return response.status(401).json((error as Error).message)
   }
 };
 export const forgotPassword = async (req:any,res:any) => {
@@ -127,7 +113,7 @@ export const forgotPassword = async (req:any,res:any) => {
 
       const user = await prisma.user.findUnique({ where:{email: req.body.email} });
       if (!user)
-          return res.status(400).send("user with given email doesn't exist");
+          return res.status(404).send("user with given email doesn't exist");
 
       let token = await prisma.passwordToken.findFirst({ 
         where:{
