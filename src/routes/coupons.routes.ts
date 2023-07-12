@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as controller from '../controllers/coupon.controller'
-import { verifyToken } from '../middleware/auth';
+import { verifyToken } from '../utils/auth';
 
 
 const couponRouter = Router()

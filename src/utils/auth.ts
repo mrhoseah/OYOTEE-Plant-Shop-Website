@@ -1,13 +1,13 @@
 import * as jwt from "jsonwebtoken";
-import {PrismaClient } from "@prisma/client";
+import type{User } from "@prisma/client";
 import Joi, { any } from  'joi'
 import dotenv from 'dotenv';
+import prisma from "./db";
 
 dotenv.config();
 
-const prisma = new PrismaClient()
 
-export function refreshToken(user:any) {
+export function refreshToken(user:User) {
   return jwt.sign({ user },  process.env.SECRET_REFRESH_TOKEN as string,{ expiresIn:'86400'})
 }
 export function generateToken(user:any) {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validateUser,verifyToken } from '../middleware/auth';
+import { validateUser,verifyToken } from '../utils/auth';
 import* as controller from '../controllers/auth.controller'
 import { userAvatarUpload } from '../middleware/handleUpload';
 

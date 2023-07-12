@@ -1,7 +1,7 @@
 import * as controller from '../controllers/users.controller'
 import { Router } from 'express';
 import { userAvatarUpload } from '../middleware/handleUpload';
-import { verifyToken } from '../middleware/auth';
+import { verifyToken } from '../utils/auth';
 
 
 const usershRouter = Router()

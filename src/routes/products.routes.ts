@@ -1,6 +1,6 @@
 import * as controller from '../controllers/products.controller'
 import { productImageUpload } from '../middleware/handleUpload';
-import { verifyToken } from '../middleware/auth';
+import { verifyToken } from '../utils/auth';
 import { Router } from 'express';
 
 
