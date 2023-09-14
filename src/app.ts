@@ -17,10 +17,6 @@ const window = {
 };
 
 const app = express()
-const corsOptions = {
-  credentials: true,
-  origin:process.env.WHITELISTORIGIN,
-}
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -29,7 +25,6 @@ app.use(
 app.use(express.static('public'))
 app.use(helmet());
 app.use(express.json())
-app.use(cors(corsOptions))
 app.use(express.urlencoded({ extended: true }))
 
 app.get("/", (req, res) => {
